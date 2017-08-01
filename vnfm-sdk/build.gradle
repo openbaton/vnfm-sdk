@@ -16,11 +16,10 @@
  */
 
 dependencies {
-        compile project(':catalogue')
+    compile 'org.openbaton:catalogue:4.0.1-SNAPSHOT'
 
-        compile 'org.slf4j:slf4j-api:1.7.22'
+    compile 'com.google.code.gson:gson:2.8.0'
+    compile 'org.slf4j:slf4j-api:1.7.22'
 
-        compile 'com.google.code.gson:gson:2.8.0'
-
-        testCompile group: 'junit', name: 'junit', version: junitVersion
-    }
+    testCompile group: 'junit', name: 'junit', version: '4.12'
+}

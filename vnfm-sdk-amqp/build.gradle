@@ -18,7 +18,7 @@
 
 dependencies {
         compile project(':vnfm-sdk')
-        compile project(':registration')
+        compile 'org.openbaton:registration:4.0.1-SNAPSHOT'
 
 
         compile 'org.springframework:spring-context:' + springVersion
@@ -27,5 +27,5 @@ dependencies {
         compile 'org.springframework.boot:spring-boot-autoconfigure:' + springBootVersion
 
         compile 'org.springframework.boot:spring-boot-starter-amqp:' + springBootVersion
-        testCompile group: 'junit', name: 'junit', version: junitVersion
+        testCompile group: 'junit', name: 'junit', version: '4.12'
     }

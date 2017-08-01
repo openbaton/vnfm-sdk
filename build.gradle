@@ -29,7 +29,20 @@ plugins {
     id 'com.github.ben-manes.versions' version '0.13.0'
 }
 
-apply from: 'gradle/gradle/git.release.gradle'
+ext {
+    //------------------------------------------------//
+    /**
+     * Spring Related Variables
+     */
+    springVersion = '4.3.5.RELEASE'
+    springBootVersion = '1.2.5.RELEASE'
+    //------------------------------------------------//
+    /**
+     * Junit Version
+     */
+    junitVersion = "4.12"
+}
+
 apply from: 'gradle/gradle/nexus.upload.plugin.gradle'
 
 apply plugin: 'java'
@@ -43,51 +56,32 @@ apply from: 'gradle/gradle/helpers.gradle'
 apply from: 'gradle/gradle/command.line.helper.gradle'
 apply from: 'gradle/gradle/git.helpers.gradle'
 
-ext {
-    //------------------------------------------------//
-    /**
-     * Spring Related Variables
-     */
-    springVersion = '4.3.5.RELEASE'
-    springBootVersion = '1.2.5.RELEASE'
-    //------------------------------------------------//
-    //------------------------------------------------//
-    /**
-     * Application Related Version
-     */
-    applicationVersion = "0.6-alpha"
-    applicationVersionDebian = "1"
-    //------------------------------------------------//
-    //------------------------------------------------//
-    /**
-     * Junit Version
-     */
-    junitVersion = "4.12"
-}
 
 apply from: 'gradle/gradle/application.java.gradle'
 
-repositories {
-    mavenCentral()
-    mavenLocal()
-}
-
 allprojects {
+    repositories {
+        mavenCentral()
+        mavenLocal()
+        maven {
+            url 'https://oss.sonatype.org/content/repositories/snapshots/'
+        }
+    }
 
     sourceSets {
         main {
-            java      { srcDir 'src/main/java'}
-            resources { srcDir 'src/main/resources'}
+            java { srcDir 'src/main/java' }
+            resources { srcDir 'src/main/resources' }
         }
 
         test {
-            java      { srcDir 'src/test/java'}
-            resources { srcDir 'src/test/resources'}
+            java { srcDir 'src/test/java' }
+            resources { srcDir 'src/test/resources' }
         }
 
         integration {
-            java      { srcDir 'src/test/integration/java' }
-            resources { srcDir 'src/test/resources'}
+            java { srcDir 'src/test/integration/java' }
+            resources { srcDir 'src/test/resources' }
             compileClasspath += sourceSets.test.compileClasspath
             runtimeClasspath += sourceSets.test.runtimeClasspath
             output.classesDir = sourceSets.test.output.classesDir
@@ -103,6 +97,6 @@ allprojects {
 compileJava.dependsOn tasks.googleJavaFormat
 
 javadoc {
-	source = sourceSets.main.allJava
-	classpath = configurations.compile
+    source = sourceSets.main.allJava
+    classpath = configurations.compile
 }
