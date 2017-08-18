@@ -31,28 +31,33 @@ import org.openbaton.catalogue.nfvo.VimInstance;
 public interface VNFLifecycleManagement {
 
   /**
-   * This operation allows creating a VNF instance.
+   * This operation allows creating a VNF instance and run the instantiate action.
    *
-   * @param virtualNetworkFunctionRecord
-   * @param scripts
-   * @param vimInstances
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to instantiate
+   * @param scripts the scripts to exectute, could be a link or a list of {@link Script}
+   * @param vimInstances the mapping between the {@link VimInstance} and te VDU ids
+   * @return the {@link VirtualNetworkFunctionRecord} updated
+   * @throws Exception in case of an exception
    */
   VirtualNetworkFunctionRecord instantiate(
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord,
       Object scripts,
       Map<String, Collection<VimInstance>> vimInstances)
       throws Exception;
+
   /** This operation allows retrieving VNF instance state and attributes. */
   void query();
 
   /**
    * This operation allows scaling (out/in, up/down) a VNF instance.
    *
-   * @param scaleOut
-   * @param virtualNetworkFunctionRecord
-   * @param component
-   * @param scripts
-   * @param dependency
+   * @param scaleOut the {@link Action} to execute
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to scale
+   * @param component the {@link VNFComponent} or {@link VNFCInstance} to add/remove
+   * @param scripts the scripts to exectute, could be a link or a list of {@link Script}
+   * @param dependency the {@link VNFRecordDependency} regarding the scale action
+   * @return the {@link VirtualNetworkFunctionRecord} updated
+   * @throws Exception in case of an exception
    */
   VirtualNetworkFunctionRecord scale(
       Action scaleOut,
@@ -65,7 +70,15 @@ public interface VNFLifecycleManagement {
   /** This operation allows verifying if the VNF instantiation is possible. */
   void checkInstantiationFeasibility();
 
-  /** This operation allows verifying if the VNF instantiation is possible. */
+  /**
+   * This operation allows verifying if the VNF instantiation is possible.
+   *
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to heal
+   * @param component the {@link VNFCInstance} to heal
+   * @param cause the cause of the problem
+   * @return the {@link VirtualNetworkFunctionRecord} updated
+   * @throws Exception in case of an exception
+   */
   VirtualNetworkFunctionRecord heal(
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord,
       VNFCInstance component,
@@ -75,8 +88,10 @@ public interface VNFLifecycleManagement {
   /**
    * This operation allows applying a minor/limited software update (e.g. patch) to a VNF instance.
    *
-   * @param script
-   * @param virtualNetworkFunctionRecord
+   * @param script the scripts to exectute, could be a link or a list of {@link Script}
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to update
+   * @return the {@link VirtualNetworkFunctionRecord} updated
+   * @throws Exception in case of an exception
    */
   VirtualNetworkFunctionRecord updateSoftware(
       Script script, VirtualNetworkFunctionRecord virtualNetworkFunctionRecord) throws Exception;
@@ -85,8 +100,11 @@ public interface VNFLifecycleManagement {
    * This operation allows making structural changes (e.g. configuration, topology, behavior,
    * redundancy model) to a VNF instance.
    *
-   * @param virtualNetworkFunctionRecord
-   * @param dependency
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to which invoke
+   *     the modify
+   * @param dependency the the {@link VNFRecordDependency} regarding the this VNFR
+   * @return the {@link VirtualNetworkFunctionRecord} updated
+   * @throws Exception in case of an exception
    */
   VirtualNetworkFunctionRecord modify(
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord, VNFRecordDependency dependency)
@@ -98,7 +116,9 @@ public interface VNFLifecycleManagement {
   /**
    * This operation allows terminating gracefully or forcefully a previously created VNF instance.
    *
-   * @param virtualNetworkFunctionRecord
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to terminate
+   * @return the {@link VirtualNetworkFunctionRecord} updated
+   * @throws Exception in case of an exception
    */
   VirtualNetworkFunctionRecord terminate(VirtualNetworkFunctionRecord virtualNetworkFunctionRecord)
       throws Exception;
