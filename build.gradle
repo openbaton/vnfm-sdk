@@ -49,7 +49,7 @@ apply plugin: 'java'
 apply plugin: 'idea'
 apply plugin: 'eclipse'
 
-sourceCompatibility = 1.7
+sourceCompatibility = 1.8
 
 apply from: 'gradle/gradle/helpers.gradle'
 
