@@ -565,7 +565,8 @@ public abstract class AbstractVnfm
   /**
    * This method needs to set all the parameter specified in the VNFDependency.parameters
    *
-   * @param virtualNetworkFunctionRecord
+   * @param virtualNetworkFunctionRecord the {@link VirtualNetworkFunctionRecord} to fill specific
+   *     provides.
    */
   protected void fillSpecificProvides(VirtualNetworkFunctionRecord virtualNetworkFunctionRecord) {}
 
@@ -573,12 +574,15 @@ public abstract class AbstractVnfm
    * This method can be overwritten in case you want a specific initialization of the
    * VirtualNetworkFunctionRecordShort from the VirtualNetworkFunctionDescriptor
    *
-   * @param virtualNetworkFunctionDescriptor
-   * @param extension
-   * @param vimInstances
-   * @return The new VirtualNetworkFunctionRecordShort
-   * @throws BadFormatException
-   * @throws NotFoundException
+   * @param virtualNetworkFunctionDescriptor the {@link VirtualNetworkFunctionDescriptor} from which
+   *     create the {@link VirtualNetworkFunctionRecord}
+   * @param flavourId the chosen flavor
+   * @param virtualLinkRecords the {@link VirtualLinkRecord} of the NSD
+   * @param extension The extensions passed to the VNFManager
+   * @param vimInstances the {@link Map} between vdu id and chosen VimInstances
+   * @return The new {@link VirtualNetworkFunctionRecord} created
+   * @throws BadFormatException in case of error while sending back to the nfvo
+   * @throws NotFoundException in case of error while sending back to the nfvo
    */
   protected VirtualNetworkFunctionRecord createVirtualNetworkFunctionRecord(
       VirtualNetworkFunctionDescriptor virtualNetworkFunctionDescriptor,
@@ -606,11 +610,7 @@ public abstract class AbstractVnfm
       }
       log.debug("Created VirtualNetworkFunctionRecordShort: " + virtualNetworkFunctionRecord);
       return virtualNetworkFunctionRecord;
-    } catch (NotFoundException e) {
-      e.printStackTrace();
-      vnfmHelper.sendToNfvo(VnfmUtils.getNfvMessage(Action.ERROR, null));
-      throw e;
-    } catch (BadFormatException e) {
+    } catch (NotFoundException | BadFormatException e) {
       e.printStackTrace();
       vnfmHelper.sendToNfvo(VnfmUtils.getNfvMessage(Action.ERROR, null));
       throw e;

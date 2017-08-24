@@ -30,6 +30,7 @@ import org.openbaton.common.vnfm_sdk.VnfmHelper;
 import org.openbaton.common.vnfm_sdk.amqp.configuration.RabbitConfiguration;
 import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
@@ -41,7 +42,9 @@ import org.springframework.stereotype.Service;
 @ConfigurationProperties
 public class VnfmSpringHelperRabbit extends VnfmHelper {
 
-  @Autowired private Gson gson;
+  @Autowired
+  @Qualifier("vnfmGson")
+  private Gson gson;
 
   @Value("${vnfm.rabbitmq.autodelete}")
   private boolean autodelete = true;
