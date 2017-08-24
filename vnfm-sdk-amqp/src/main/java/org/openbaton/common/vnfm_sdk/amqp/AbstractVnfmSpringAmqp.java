@@ -38,6 +38,7 @@ import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
 import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
 import org.openbaton.registration.Registration;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
@@ -71,7 +72,10 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
   @Value("${vnfm.consumers.num:5}")
   private int consumers;
 
-  @Autowired private Gson gson;
+  @Autowired
+  @Qualifier("vnfmGson")
+  private Gson gson;
+
   @Autowired private ConfigurableApplicationContext context;
   @Autowired private Registration registration;
 
@@ -119,10 +123,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
                           NFVMessage.class);
 
                   answerMessage = onAction(nfvMessage);
-                } catch (NotFoundException e) {
-                  log.error("Error while processing message from NFVO");
-                  e.printStackTrace();
-                } catch (BadFormatException e) {
+                } catch (NotFoundException | BadFormatException e) {
                   log.error("Error while processing message from NFVO");
                   e.printStackTrace();
                 } finally {
@@ -139,18 +140,18 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
         while (true) {
           try {
             Thread.sleep(500);
-          } catch (InterruptedException _ignore) {
+          } catch (InterruptedException e) {
+            log.info("Ctrl-c received");
+            System.exit(0);
           }
         }
       } catch (IOException e) {
-        e.printStackTrace();
-      } catch (TimeoutException e) {
         e.printStackTrace();
       } finally {
         if (connection != null) {
           try {
             connection.close();
-          } catch (IOException _ignore) {
+          } catch (IOException ignored) {
           }
         }
       }

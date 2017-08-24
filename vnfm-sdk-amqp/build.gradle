@@ -19,6 +19,7 @@
 dependencies {
         compile project(':vnfm-sdk')
         compile 'org.openbaton:registration:4.0.1-SNAPSHOT'
+        compile 'org.openbaton:common:4.0.1-SNAPSHOT'
 
 
         compile 'org.springframework:spring-context:' + springVersion

@@ -15,23 +15,22 @@
  *
  */
 
-package org.openbaton.common.vnfm_sdk.amqp.configuration;
+package org.openbaton.common.vnfm_sdk.rest.configuration;
 
-import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
-import org.springframework.context.annotation.Bean;
-import org.springframework.context.annotation.Configuration;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonPrimitive;
+import com.google.gson.JsonSerializationContext;
+import com.google.gson.JsonSerializer;
+import java.lang.reflect.Type;
+import java.util.Date;
+import org.springframework.stereotype.Service;
 
-/** Created by lto on 17/05/16. */
-@Configuration
-public class GsonConfiguration {
+/** Created by lto on 10/11/15. */
+@Service
+public class GsonSerializerDate implements JsonSerializer<Date> {
 
-  @Bean
-  Gson gson() {
-    return new GsonBuilder()
-        .setPrettyPrinting()
-        .registerTypeAdapter(NFVMessage.class, new GsonDeserializerNFVMessage())
-        .create();
+  @Override
+  public JsonElement serialize(Date src, Type typeOfSrc, JsonSerializationContext context) {
+    return new JsonPrimitive(src.getTime());
   }
 }
