@@ -18,20 +18,24 @@
 package org.openbaton.common.vnfm_sdk.rest;
 
 import com.google.gson.Gson;
-import com.google.gson.GsonBuilder;
-import javax.annotation.PreDestroy;
+
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.AbstractVnfm;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
 import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
-import org.openbaton.common.vnfm_sdk.rest.configuration.GsonDeserializerNFVMessage;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
-import org.springframework.context.annotation.Bean;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.ResponseStatus;
+import org.springframework.web.bind.annotation.RestController;
+
+import javax.annotation.PreDestroy;
 
 //import javax.validation.Valid;
 
@@ -43,15 +47,7 @@ public abstract class AbstractVnfmSpringReST extends AbstractVnfm {
   private VnfmRestHelper vnfmRestHelper;
   @Autowired private ConfigurableApplicationContext context;
 
-  @Autowired private Gson gson;
-
-  @Bean
-  Gson gson() {
-    return new GsonBuilder()
-        .setPrettyPrinting()
-        .registerTypeAdapter(NFVMessage.class, new GsonDeserializerNFVMessage())
-        .create();
-  }
+  @Autowired @Qualifier("vnfmGson") private Gson gson;
 
   @Override
   protected void setup() {
