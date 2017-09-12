@@ -27,6 +27,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.ComponentScan;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -41,6 +42,7 @@ import javax.annotation.PreDestroy;
 
 /** Created by lto on 08/07/15. */
 @SpringBootApplication
+@ComponentScan(basePackages = "org.openbaton")
 @RestController
 public abstract class AbstractVnfmSpringReST extends AbstractVnfm {
 
