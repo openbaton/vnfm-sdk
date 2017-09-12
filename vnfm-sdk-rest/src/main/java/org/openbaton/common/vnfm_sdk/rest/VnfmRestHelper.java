@@ -18,7 +18,12 @@
 package org.openbaton.common.vnfm_sdk.rest;
 
 import com.google.gson.Gson;
-
+import java.io.IOException;
+import java.io.Serializable;
+import java.net.HttpURLConnection;
+import javax.annotation.PostConstruct;
+import javax.net.ssl.HttpsURLConnection;
+import javax.net.ssl.SSLContext;
 import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContexts;
@@ -43,14 +48,6 @@ import org.springframework.http.converter.json.MappingJackson2HttpMessageConvert
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import java.io.IOException;
-import java.io.Serializable;
-import java.net.HttpURLConnection;
-
-import javax.annotation.PostConstruct;
-import javax.net.ssl.HttpsURLConnection;
-import javax.net.ssl.SSLContext;
-
 /** Created by lto on 28/09/15. */
 @Service
 @Scope("prototype")
@@ -65,7 +62,10 @@ public class VnfmRestHelper extends VnfmHelper {
   private HttpHeaders headers;
   private HttpStatus status;
   private Logger log = LoggerFactory.getLogger(this.getClass());
-  @Autowired @Qualifier("vnfmGson") private Gson gson;
+
+  @Autowired
+  @Qualifier("vnfmGson")
+  private Gson gson;
 
   @PostConstruct
   private void init() {

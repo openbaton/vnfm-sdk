@@ -18,7 +18,7 @@
 package org.openbaton.common.vnfm_sdk.rest;
 
 import com.google.gson.Gson;
-
+import javax.annotation.PreDestroy;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.AbstractVnfm;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
@@ -36,8 +36,6 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestController;
 
-import javax.annotation.PreDestroy;
-
 //import javax.validation.Valid;
 
 /** Created by lto on 08/07/15. */
@@ -49,7 +47,9 @@ public abstract class AbstractVnfmSpringReST extends AbstractVnfm {
   private VnfmRestHelper vnfmRestHelper;
   @Autowired private ConfigurableApplicationContext context;
 
-  @Autowired @Qualifier("vnfmGson") private Gson gson;
+  @Autowired
+  @Qualifier("vnfmGson")
+  private Gson gson;
 
   @Override
   protected void setup() {
