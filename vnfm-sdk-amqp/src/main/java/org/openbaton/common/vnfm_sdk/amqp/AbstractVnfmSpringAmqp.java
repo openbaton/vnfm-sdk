@@ -30,7 +30,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeoutException;
-import javax.annotation.PostConstruct;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.AbstractVnfm;
 import org.openbaton.common.vnfm_sdk.VnfmHelper;
@@ -42,17 +41,17 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
 import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 
 /** Created by lto on 28/05/15. */
 @SpringBootApplication
 @ComponentScan(basePackages = "org.openbaton")
 @ConfigurationProperties
-public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
-    implements ApplicationListener<ContextClosedEvent> {
+public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
 
   @Value("${spring.rabbitmq.host}")
   private String rabbitHost;
@@ -71,6 +70,9 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
 
   @Value("${vnfm.consumers.num:5}")
   private int consumers;
+
+  @Value("${vnfm.connect.tries:20}")
+  private int maxTries;
 
   @Autowired
   @Qualifier("vnfmGson")
@@ -158,8 +160,8 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
     }
   }
 
-  @PostConstruct
   private void listenOnQueues() {
+    log.debug("Start listening on queues");
 
     for (int i = 0; i < consumers; i++) {
       Runnable listenerRunnable = new ConsumerRunnable();
@@ -170,11 +172,23 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
     log.info("Started " + consumers + " consumers");
   }
 
+  /**
+   * Deregisters the VNFM from the NFVO as soon as Spring sends its ContextClosedEvent.
+   *
+   * @param event the Spring ContextClosedEvent
+   */
+  @EventListener
+  protected void unregister(ContextClosedEvent event) {
+    unregister();
+  }
+
   @Override
   protected void unregister() {
     try {
-      // ((VnfmSpringHelperRabbit) vnfmHelper)
-      //     .sendMessageToQueue(RabbitConfiguration.queueName_vnfmUnregister, vnfmManagerEndpoint);
+      if (!registration.hasUsername()) {
+        log.trace("VNFM did not register yet, so no deregistration necessary.");
+        return;
+      }
       registration.deregisterVnfmFromNfvo(
           ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
       ((VnfmSpringHelperRabbit) vnfmHelper)
@@ -193,18 +207,56 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
     }
   }
 
+  /**
+   * Registers the VNFM to the NFVO as soon as Spring sends its ContextRefreshedEvent.
+   *
+   * @param event the Spring ContextRefreshedEvent
+   */
+  @EventListener
+  private void register(ContextRefreshedEvent event) {
+    register();
+  }
+
   @Override
   protected void register() {
     String[] usernamePassword = new String[0];
-    try {
-      usernamePassword =
-          registration.registerVnfmToNfvo(
-              ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      log.error("Not able to register..");
-      System.exit(2);
+    final boolean[] tryToRegister = {true};
+
+    Thread shutdownHook =
+        new Thread() {
+          public void run() {
+            tryToRegister[0] = false;
+            return;
+          }
+        };
+    Runtime.getRuntime().addShutdownHook(shutdownHook);
+
+    int tries = 0;
+    Object res = null;
+    if (maxTries < 0) maxTries = Integer.MAX_VALUE;
+    while (true) {
+      if (!tryToRegister[0]) {
+        context.close();
+        return;
+      }
+      try {
+        usernamePassword =
+            registration.registerVnfmToNfvo(
+                ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
+        break;
+      } catch (IllegalArgumentException e) {
+        log.debug("Registration failed: " + e.getMessage());
+        tries++;
+        if (tries >= (maxTries)) throw e;
+        log.debug("Try again in 2.5 seconds.");
+        try {
+          Thread.sleep(2500);
+        } catch (InterruptedException e1) {
+          e1.printStackTrace();
+        }
+      }
     }
+    Runtime.getRuntime().removeShutdownHook(shutdownHook);
 
     this.rabbitUsername = usernamePassword[0];
     this.rabbitPassword = usernamePassword[1];
@@ -226,11 +278,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
     }
 
     log.info("Correctly registered to NFVO");
-  }
-
-  @Override
-  public void onApplicationEvent(ContextClosedEvent event) {
-    unregister();
+    listenOnQueues();
   }
 
   private static String getStringFromInputStream(InputStream is) {

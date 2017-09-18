@@ -645,10 +645,8 @@ public abstract class AbstractVnfm
     return null;
   }
 
-  /** This method unsubscribe the VNFM in the NFVO */
   protected abstract void unregister();
 
-  /** This method subscribe the VNFM to the NFVO sending the right endpoint */
   protected abstract void register();
 
   /**
@@ -665,7 +663,6 @@ public abstract class AbstractVnfm
     vnfmManagerEndpoint.setEndpoint(this.endpoint);
     log.debug("creating VnfmManagerEndpoint for vnfm endpointType: " + this.endpointType);
     vnfmManagerEndpoint.setEndpointType(EndpointType.valueOf(this.endpointType));
-    register();
   }
 
   class GrantOperation implements Callable<OrVnfmGrantLifecycleOperationMessage> {

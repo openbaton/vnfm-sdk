@@ -18,7 +18,6 @@
 package org.openbaton.common.vnfm_sdk.rest;
 
 import com.google.gson.Gson;
-import javax.annotation.PreDestroy;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.AbstractVnfm;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
@@ -28,6 +27,9 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ComponentScan;
+import org.springframework.context.event.ContextClosedEvent;
+import org.springframework.context.event.ContextRefreshedEvent;
+import org.springframework.context.event.EventListener;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -58,10 +60,29 @@ public abstract class AbstractVnfmSpringReST extends AbstractVnfm {
     super.setup();
   }
 
+  /**
+   * Deregisters the VNFM from the NFVO as soon as Spring sends its ContextClosedEvent.
+   *
+   * @param event the Spring ContextClosedEvent
+   */
+  @EventListener
+  protected void unregister(ContextClosedEvent event) {
+    unregister();
+  }
+
   @Override
-  @PreDestroy
   protected void unregister() {
     vnfmRestHelper.unregister(vnfmManagerEndpoint);
+  }
+
+  /**
+   * Registers the VNFM to the NFVO as soon as Spring sends its ContextRefreshedEvent.
+   *
+   * @param event the Spring ContextRefreshedEvent
+   */
+  @EventListener
+  private void register(ContextRefreshedEvent event) {
+    register();
   }
 
   @Override
