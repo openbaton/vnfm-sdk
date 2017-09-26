@@ -147,8 +147,6 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
         }
       } catch (IOException e) {
         e.printStackTrace();
-      } catch (TimeoutException e) {
-        e.printStackTrace();
       } finally {
         if (connection != null) {
           try {
