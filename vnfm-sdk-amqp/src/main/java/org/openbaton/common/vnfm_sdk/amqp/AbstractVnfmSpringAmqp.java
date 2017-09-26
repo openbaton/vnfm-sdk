@@ -147,6 +147,8 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
         }
       } catch (IOException e) {
         e.printStackTrace();
+      } catch (TimeoutException e) {
+        e.printStackTrace();
       } finally {
         if (connection != null) {
           try {
@@ -196,15 +198,15 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
   @Override
   protected void register() {
     String[] usernamePassword = new String[0];
-    try {
-      usernamePassword =
-          registration.registerVnfmToNfvo(
-              ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
-    } catch (InterruptedException e) {
-      e.printStackTrace();
-      log.error("Not able to register..");
-      System.exit(2);
-    }
+    //    try {
+    usernamePassword =
+        registration.registerVnfmToNfvo(
+            ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
+    //    } catch (InterruptedException e) {
+    //      e.printStackTrace();
+    //      log.error("Not able to register..");
+    //      System.exit(2);
+    //    }
 
     this.rabbitUsername = usernamePassword[0];
     this.rabbitPassword = usernamePassword[1];
