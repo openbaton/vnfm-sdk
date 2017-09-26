@@ -200,7 +200,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm
       usernamePassword =
           registration.registerVnfmToNfvo(
               ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
-    } catch (InterruptedException e) {
+    } catch (Exception e) {
       e.printStackTrace();
       log.error("Not able to register..");
       System.exit(2);

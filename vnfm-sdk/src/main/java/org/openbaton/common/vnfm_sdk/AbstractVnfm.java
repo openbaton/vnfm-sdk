@@ -40,11 +40,7 @@ import org.openbaton.catalogue.mano.record.VNFCInstance;
 import org.openbaton.catalogue.mano.record.VNFRecordDependency;
 import org.openbaton.catalogue.mano.record.VirtualLinkRecord;
 import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
-import org.openbaton.catalogue.nfvo.Action;
-import org.openbaton.catalogue.nfvo.EndpointType;
-import org.openbaton.catalogue.nfvo.Script;
-import org.openbaton.catalogue.nfvo.VimInstance;
-import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
+import org.openbaton.catalogue.nfvo.*;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmErrorMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmGenericMessage;
@@ -356,6 +352,10 @@ public abstract class AbstractVnfm
             allocateResources.setVirtualNetworkFunctionRecord(virtualNetworkFunctionRecord);
             allocateResources.setVimInstances(vimInstanceChosen);
             allocateResources.setKeyPairs(orVnfmInstantiateMessage.getKeys());
+            if (orVnfmInstantiateMessage.getVnfPackage() != null
+                && orVnfmInstantiateMessage.getVnfPackage().getScripts() != null)
+              allocateResources.setCustomUserData(
+                  getUserDataFromPackage(orVnfmInstantiateMessage.getVnfPackage().getScripts()));
             try {
               virtualNetworkFunctionRecord = executor.submit(allocateResources).get();
               if (virtualNetworkFunctionRecord == null) {
@@ -521,6 +521,16 @@ public abstract class AbstractVnfm
       return VnfmUtils.getNfvErrorMessage(virtualNetworkFunctionRecord, e, nsrId);
     }
     return null;
+  }
+
+  private String getUserDataFromPackage(Set<Script> scripts) {
+    String userdata = null;
+    for (Script script : scripts) {
+      if (script.getName().equals("userdata.sh") || script.getName().equals("user-data.sh")) {
+        userdata = new String(script.getPayload());
+      }
+    }
+    return userdata;
   }
 
   private VNFCInstance getVnfcInstance(
@@ -713,6 +723,7 @@ public abstract class AbstractVnfm
   class AllocateResources implements Callable<VirtualNetworkFunctionRecord> {
     private VirtualNetworkFunctionRecord virtualNetworkFunctionRecord;
     private Set<Key> keyPairs;
+    private String customUserData;
 
     public void setVimInstances(Map<String, VimInstance> vimInstances) {
       this.vimInstances = vimInstances;
@@ -729,11 +740,18 @@ public abstract class AbstractVnfm
       this.virtualNetworkFunctionRecord = virtualNetworkFunctionRecord;
     }
 
+    public void setCustomUserData(String customUserData) {
+      this.customUserData = customUserData;
+    }
+
     public VirtualNetworkFunctionRecord allocateResources() throws VnfmSdkException {
       NFVMessage response;
       try {
 
         String userData = getUserData();
+        if (customUserData != null) {
+          userData += "\n" + customUserData;
+        }
         log.debug("Userdata sent to NFVO: " + userData);
         response =
             vnfmHelper.sendAndReceive(
