@@ -220,6 +220,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
   @Override
   protected void register() {
     String[] usernamePassword = new String[0];
+
     final boolean[] tryToRegister = {true};
 
     Thread shutdownHook =
