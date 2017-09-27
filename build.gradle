@@ -62,7 +62,6 @@ apply from: 'gradle/gradle/application.java.gradle'
 allprojects {
     repositories {
         mavenCentral()
-        mavenLocal()
         maven {
             url 'https://oss.sonatype.org/content/repositories/snapshots/'
         }
