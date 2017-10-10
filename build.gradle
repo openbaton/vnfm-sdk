@@ -34,8 +34,8 @@ ext {
     /**
      * Spring Related Variables
      */
-    springVersion = '4.3.5.RELEASE'
-    springBootVersion = '1.2.5.RELEASE'
+    //springVersion = '4.3.5.RELEASE'
+    springBootVersion = '1.5.7.RELEASE'
     //------------------------------------------------//
     /**
      * Junit Version
@@ -61,6 +61,7 @@ apply from: 'gradle/gradle/application.java.gradle'
 
 allprojects {
     repositories {
+        mavenLocal()
         mavenCentral()
         maven {
             url 'https://oss.sonatype.org/content/repositories/snapshots/'

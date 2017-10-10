@@ -96,9 +96,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
       connectionFactory.setUsername(rabbitUsername);
       connectionFactory.setPassword(rabbitPassword);
       connectionFactory.setVirtualHost(virtualHost);
-      Connection connection = null;
-      try {
-        connection = connectionFactory.newConnection();
+      try (Connection connection = connectionFactory.newConnection()) {
         final Channel channel = connection.createChannel();
         channel.basicQos(1);
         DefaultConsumer consumer =
@@ -147,15 +145,8 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
             System.exit(0);
           }
         }
-      } catch (IOException e) {
+      } catch (IOException | TimeoutException e) {
         e.printStackTrace();
-      } finally {
-        if (connection != null) {
-          try {
-            connection.close();
-          } catch (IOException ignored) {
-          }
-        }
       }
     }
   }
