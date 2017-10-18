@@ -17,21 +17,6 @@
 
 package org.openbaton.common.vnfm_sdk;
 
-import java.io.IOException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Set;
-import java.util.concurrent.Callable;
-import java.util.concurrent.ExecutionException;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
-import java.util.concurrent.Future;
-import javax.annotation.PostConstruct;
-import javax.annotation.PreDestroy;
 import org.openbaton.catalogue.mano.descriptor.InternalVirtualLink;
 import org.openbaton.catalogue.mano.descriptor.VNFComponent;
 import org.openbaton.catalogue.mano.descriptor.VirtualDeploymentUnit;
@@ -40,7 +25,11 @@ import org.openbaton.catalogue.mano.record.VNFCInstance;
 import org.openbaton.catalogue.mano.record.VNFRecordDependency;
 import org.openbaton.catalogue.mano.record.VirtualLinkRecord;
 import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
-import org.openbaton.catalogue.nfvo.*;
+import org.openbaton.catalogue.nfvo.Action;
+import org.openbaton.catalogue.nfvo.EndpointType;
+import org.openbaton.catalogue.nfvo.Script;
+import org.openbaton.catalogue.nfvo.VimInstance;
+import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmErrorMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmGenericMessage;
@@ -63,6 +52,23 @@ import org.openbaton.common.vnfm_sdk.utils.VNFRUtils;
 import org.openbaton.common.vnfm_sdk.utils.VnfmUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import java.io.IOException;
+import java.util.Collection;
+import java.util.HashSet;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Properties;
+import java.util.Set;
+import java.util.concurrent.Callable;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 
 /** Created by lto on 08/07/15. */
 public abstract class AbstractVnfm
@@ -233,7 +239,7 @@ public abstract class AbstractVnfm
           VNFComponent component = scalingMessage.getComponent();
           String mode = scalingMessage.getMode();
 
-          log.trace("HB_VERSION == " + virtualNetworkFunctionRecord.getHb_version());
+          log.trace("HB_VERSION == " + virtualNetworkFunctionRecord.getHbVersion());
           log.info("Adding VNFComponent: " + component);
           log.trace("The mode is:" + mode);
           VNFCInstance vnfcInstance_new = null;
@@ -247,7 +253,7 @@ public abstract class AbstractVnfm
             if (message2 instanceof OrVnfmGenericMessage) {
               OrVnfmGenericMessage message1 = (OrVnfmGenericMessage) message2;
               virtualNetworkFunctionRecord = message1.getVnfr();
-              log.trace("HB_VERSION == " + virtualNetworkFunctionRecord.getHb_version());
+              log.trace("HB_VERSION == " + virtualNetworkFunctionRecord.getHbVersion());
             } else if (message2 instanceof OrVnfmErrorMessage) {
               this.handleError(((OrVnfmErrorMessage) message2).getVnfr());
               return null;
@@ -345,7 +351,7 @@ public abstract class AbstractVnfm
           virtualNetworkFunctionRecord = msg.getVirtualNetworkFunctionRecord();
           Map<String, VimInstance> vimInstanceChosen = msg.getVduVim();
 
-          log.trace("VERSION IS: " + virtualNetworkFunctionRecord.getHb_version());
+          log.trace("VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
 
           if (!properties.getProperty("allocate", "true").equalsIgnoreCase("true")) {
             AllocateResources allocateResources = new AllocateResources();
@@ -508,13 +514,13 @@ public abstract class AbstractVnfm
       if (e instanceof VnfmSdkException) {
         VnfmSdkException vnfmSdkException = (VnfmSdkException) e;
         if (vnfmSdkException.getVnfr() != null) {
-          log.debug("sending VNFR with version: " + vnfmSdkException.getVnfr().getHb_version());
+          log.debug("sending VNFR with version: " + vnfmSdkException.getVnfr().getHbVersion());
           return VnfmUtils.getNfvErrorMessage(vnfmSdkException.getVnfr(), vnfmSdkException, nsrId);
         }
       } else if (e.getCause() instanceof VnfmSdkException) {
         VnfmSdkException vnfmSdkException = (VnfmSdkException) e.getCause();
         if (vnfmSdkException.getVnfr() != null) {
-          log.debug("sending VNFR with version: " + vnfmSdkException.getVnfr().getHb_version());
+          log.debug("sending VNFR with version: " + vnfmSdkException.getVnfr().getHbVersion());
           return VnfmUtils.getNfvErrorMessage(vnfmSdkException.getVnfr(), vnfmSdkException, nsrId);
         }
       }

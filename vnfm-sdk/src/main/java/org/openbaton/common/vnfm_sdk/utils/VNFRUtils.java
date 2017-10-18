@@ -17,12 +17,9 @@
 
 package org.openbaton.common.vnfm_sdk.utils;
 
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import org.openbaton.catalogue.mano.common.AutoScalePolicy;
@@ -43,7 +40,6 @@ import org.openbaton.catalogue.mano.record.VirtualLinkRecord;
 import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
 import org.openbaton.catalogue.nfvo.Configuration;
 import org.openbaton.catalogue.nfvo.ConfigurationParameter;
-import org.openbaton.catalogue.nfvo.HistoryLifecycleEvent;
 import org.openbaton.catalogue.nfvo.VimInstance;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
 import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
@@ -95,8 +91,7 @@ public class VNFRUtils {
       VirtualNetworkFunctionDescriptor vnfd,
       String nsr_id,
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord) {
-    virtualNetworkFunctionRecord.setLifecycle_event_history(
-        new LinkedList<HistoryLifecycleEvent>());
+    virtualNetworkFunctionRecord.setLifecycle_event_history(new LinkedHashSet<>());
     virtualNetworkFunctionRecord.setParent_ns_id(nsr_id);
     virtualNetworkFunctionRecord.setName(vnfd.getName());
     virtualNetworkFunctionRecord.setType(vnfd.getType());
@@ -132,15 +127,15 @@ public class VNFRUtils {
       internalVirtualLink_new.setCidr(internalVirtualLink.getCidr());
       internalVirtualLink_new.setLeaf_requirement(internalVirtualLink.getLeaf_requirement());
       internalVirtualLink_new.setRoot_requirement(internalVirtualLink.getRoot_requirement());
-      internalVirtualLink_new.setConnection_points_references(new HashSet<String>());
+      internalVirtualLink_new.setConnection_points_references(new HashSet<>());
       for (String conn : internalVirtualLink.getConnection_points_references()) {
         internalVirtualLink_new.getConnection_points_references().add(conn);
       }
-      internalVirtualLink_new.setQos(new HashSet<String>());
+      internalVirtualLink_new.setQos(new HashSet<>());
       for (String qos : internalVirtualLink.getQos()) {
         internalVirtualLink_new.getQos().add(qos);
       }
-      internalVirtualLink_new.setTest_access(new HashSet<String>());
+      internalVirtualLink_new.setTest_access(new HashSet<>());
       for (String test : internalVirtualLink.getTest_access()) {
         internalVirtualLink_new.getTest_access().add(test);
       }
@@ -158,7 +153,7 @@ public class VNFRUtils {
     for (LifecycleEvent lifecycleEvent : vnfd.getLifecycle_event()) {
       LifecycleEvent lifecycleEvent_new = new LifecycleEvent();
       lifecycleEvent_new.setEvent(lifecycleEvent.getEvent());
-      lifecycleEvent_new.setLifecycle_events(new ArrayList<String>());
+      lifecycleEvent_new.setLifecycle_events(new LinkedHashSet<>());
       for (String event : lifecycleEvent.getLifecycle_events()) {
         lifecycleEvent_new.getLifecycle_events().add(event);
       }
@@ -216,7 +211,7 @@ public class VNFRUtils {
       VirtualNetworkFunctionDescriptor vnfd,
       Map<String, Collection<VimInstance>> vimInstances,
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord) {
-    virtualNetworkFunctionRecord.setVdu(new HashSet<VirtualDeploymentUnit>());
+    virtualNetworkFunctionRecord.setVdu(new HashSet<>());
     for (VirtualDeploymentUnit virtualDeploymentUnit : vnfd.getVdu()) {
       VirtualDeploymentUnit vdu_new = new VirtualDeploymentUnit();
       vdu_new.setParent_vdu(virtualDeploymentUnit.getId());
@@ -257,7 +252,7 @@ public class VNFRUtils {
       vimInstancesTmp = vimInstances.get(virtualDeploymentUnit.getName());
     }
 
-    List<String> names = new ArrayList<>();
+    Set<String> names = new LinkedHashSet<>();
     for (VimInstance vi : vimInstancesTmp) {
       names.add(vi.getName());
     }
@@ -278,9 +273,7 @@ public class VNFRUtils {
       log.debug(
           "Adding the fault management policies: "
               + virtualDeploymentUnit.getFault_management_policy());
-      for (VRFaultManagementPolicy vrfmp : virtualDeploymentUnit.getFault_management_policy()) {
-        vrFaultManagementPolicies.add(vrfmp);
-      }
+      vrFaultManagementPolicies.addAll(virtualDeploymentUnit.getFault_management_policy());
     }
     vdu_new.setFault_management_policy(vrFaultManagementPolicies);
   }
@@ -298,7 +291,8 @@ public class VNFRUtils {
     for (LifecycleEvent lifecycleEvent : virtualDeploymentUnit.getLifecycle_event()) {
       LifecycleEvent lifecycleEvent_new = new LifecycleEvent();
       lifecycleEvent_new.setEvent(lifecycleEvent.getEvent());
-      lifecycleEvent_new.setLifecycle_events(lifecycleEvent.getLifecycle_events());
+      lifecycleEvent_new.setLifecycle_events(
+          (LinkedHashSet<String>) lifecycleEvent.getLifecycle_events());
       lifecycleEvents.add(lifecycleEvent_new);
     }
     vdu_new.setLifecycle_event(lifecycleEvents);

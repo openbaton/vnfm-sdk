@@ -210,7 +210,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
 
   @Override
   protected void register() {
-    String[] usernamePassword = new String[0];
+    String[] usernamePassword;
 
     final boolean[] tryToRegister = {true};
 
