@@ -17,6 +17,7 @@
 
 package org.openbaton.common.vnfm_sdk.utils;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
@@ -153,7 +154,7 @@ public class VNFRUtils {
     for (LifecycleEvent lifecycleEvent : vnfd.getLifecycle_event()) {
       LifecycleEvent lifecycleEvent_new = new LifecycleEvent();
       lifecycleEvent_new.setEvent(lifecycleEvent.getEvent());
-      lifecycleEvent_new.setLifecycle_events(new LinkedHashSet<>());
+      lifecycleEvent_new.setLifecycle_events(new ArrayList<>());
       for (String event : lifecycleEvent.getLifecycle_events()) {
         lifecycleEvent_new.getLifecycle_events().add(event);
       }
@@ -291,8 +292,7 @@ public class VNFRUtils {
     for (LifecycleEvent lifecycleEvent : virtualDeploymentUnit.getLifecycle_event()) {
       LifecycleEvent lifecycleEvent_new = new LifecycleEvent();
       lifecycleEvent_new.setEvent(lifecycleEvent.getEvent());
-      lifecycleEvent_new.setLifecycle_events(
-          (LinkedHashSet<String>) lifecycleEvent.getLifecycle_events());
+      lifecycleEvent_new.setLifecycle_events(lifecycleEvent.getLifecycle_events());
       lifecycleEvents.add(lifecycleEvent_new);
     }
     vdu_new.setLifecycle_event(lifecycleEvents);
