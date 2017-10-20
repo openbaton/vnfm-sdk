@@ -23,12 +23,8 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import org.openbaton.catalogue.mano.common.AutoScalePolicy;
-import org.openbaton.catalogue.mano.common.ConnectionPoint;
-import org.openbaton.catalogue.mano.common.DeploymentFlavour;
-import org.openbaton.catalogue.mano.common.LifecycleEvent;
-import org.openbaton.catalogue.mano.common.ScalingAction;
-import org.openbaton.catalogue.mano.common.ScalingAlarm;
+import org.openbaton.catalogue.mano.common.*;
+import org.openbaton.catalogue.mano.common.faultmanagement.Criteria;
 import org.openbaton.catalogue.mano.common.faultmanagement.VRFaultManagementPolicy;
 import org.openbaton.catalogue.mano.descriptor.InternalVirtualLink;
 import org.openbaton.catalogue.mano.descriptor.VNFComponent;
@@ -219,7 +215,6 @@ public class VNFRUtils {
       vdu_new.setName(virtualDeploymentUnit.getName());
       vdu_new.setVimInstanceName(virtualDeploymentUnit.getVimInstanceName());
       vdu_new.setHostname(virtualDeploymentUnit.getHostname());
-      vdu_new.setHigh_availability(virtualDeploymentUnit.getHigh_availability());
       vdu_new.setComputation_requirement(virtualDeploymentUnit.getComputation_requirement());
       vdu_new.setScale_in_out(virtualDeploymentUnit.getScale_in_out());
       vdu_new.setVdu_constraint(virtualDeploymentUnit.getVdu_constraint());
@@ -234,6 +229,8 @@ public class VNFRUtils {
 
       setMonitoringParameters(virtualDeploymentUnit, vdu_new);
 
+      setHighAvailability(virtualDeploymentUnit, vdu_new);
+
       setFaultManagementPolicies(virtualDeploymentUnit, vdu_new);
 
       setVmImages(virtualDeploymentUnit, vdu_new);
@@ -242,6 +239,16 @@ public class VNFRUtils {
 
       virtualNetworkFunctionRecord.getVdu().add(vdu_new);
     }
+  }
+
+  private static void setHighAvailability(
+      VirtualDeploymentUnit vdu, VirtualDeploymentUnit vdu_new) {
+    if (vdu.getHigh_availability() == null) return;
+    HighAvailability highAvailability = new HighAvailability();
+    highAvailability.setGeoRedundancy(vdu.getHigh_availability().isGeoRedundancy());
+    highAvailability.setRedundancyScheme(vdu.getHigh_availability().getRedundancyScheme());
+    highAvailability.setResiliencyLevel(vdu.getHigh_availability().getResiliencyLevel());
+    vdu_new.setHigh_availability(highAvailability);
   }
 
   private static void setVimInstanceNames(
@@ -274,7 +281,27 @@ public class VNFRUtils {
       log.debug(
           "Adding the fault management policies: "
               + virtualDeploymentUnit.getFault_management_policy());
-      vrFaultManagementPolicies.addAll(virtualDeploymentUnit.getFault_management_policy());
+      for (VRFaultManagementPolicy vrfmp : virtualDeploymentUnit.getFault_management_policy()) {
+        VRFaultManagementPolicy vrFaultManagementPolicy_new = new VRFaultManagementPolicy();
+        vrFaultManagementPolicy_new.setAction(vrfmp.getAction());
+        Set<Criteria> criteriaSet = new HashSet<>();
+        for (Criteria criteria : vrfmp.getCriteria()) {
+          Criteria criteria_new = new Criteria();
+          criteria_new.setName(criteria.getName());
+          criteria_new.setParameter_ref(criteria.getParameter_ref());
+          criteria_new.setFunction(criteria.getFunction());
+          criteria_new.setVnfc_selector(criteria.getVnfc_selector());
+          criteria_new.setComparison_operator(criteria.getComparison_operator());
+          criteria_new.setThreshold(criteria.getThreshold());
+          criteriaSet.add(criteria_new);
+        }
+        vrFaultManagementPolicy_new.setCriteria(criteriaSet);
+        vrFaultManagementPolicy_new.setName(vrfmp.getName());
+        vrFaultManagementPolicy_new.setPeriod(vrfmp.getPeriod());
+        vrFaultManagementPolicy_new.setSeverity(vrfmp.getSeverity());
+        vrFaultManagementPolicy_new.setVNFAlarm(vrfmp.isVNFAlarm());
+        vrFaultManagementPolicies.add(vrFaultManagementPolicy_new);
+      }
     }
     vdu_new.setFault_management_policy(vrFaultManagementPolicies);
   }
