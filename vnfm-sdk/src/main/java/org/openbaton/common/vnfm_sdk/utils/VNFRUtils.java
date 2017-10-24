@@ -25,7 +25,7 @@ import java.util.Map;
 import java.util.Set;
 import org.openbaton.catalogue.mano.common.*;
 import org.openbaton.catalogue.mano.common.faultmanagement.Criteria;
-import org.openbaton.catalogue.mano.common.faultmanagement.VRFaultManagementPolicy;
+import org.openbaton.catalogue.mano.common.faultmanagement.FaultManagementPolicy;
 import org.openbaton.catalogue.mano.descriptor.InternalVirtualLink;
 import org.openbaton.catalogue.mano.descriptor.VNFComponent;
 import org.openbaton.catalogue.mano.descriptor.VNFDConnectionPoint;
@@ -245,7 +245,6 @@ public class VNFRUtils {
       VirtualDeploymentUnit vdu, VirtualDeploymentUnit vdu_new) {
     if (vdu.getHigh_availability() == null) return;
     HighAvailability highAvailability = new HighAvailability();
-    highAvailability.setGeoRedundancy(vdu.getHigh_availability().isGeoRedundancy());
     highAvailability.setRedundancyScheme(vdu.getHigh_availability().getRedundancyScheme());
     highAvailability.setResiliencyLevel(vdu.getHigh_availability().getResiliencyLevel());
     vdu_new.setHigh_availability(highAvailability);
@@ -276,14 +275,14 @@ public class VNFRUtils {
 
   private static void setFaultManagementPolicies(
       VirtualDeploymentUnit virtualDeploymentUnit, VirtualDeploymentUnit vdu_new) {
-    Set<VRFaultManagementPolicy> vrFaultManagementPolicies = new HashSet<>();
+    Set<FaultManagementPolicy> faultManagementPolicies = new HashSet<>();
     if (virtualDeploymentUnit.getFault_management_policy() != null) {
       log.debug(
           "Adding the fault management policies: "
               + virtualDeploymentUnit.getFault_management_policy());
-      for (VRFaultManagementPolicy vrfmp : virtualDeploymentUnit.getFault_management_policy()) {
-        VRFaultManagementPolicy vrFaultManagementPolicy_new = new VRFaultManagementPolicy();
-        vrFaultManagementPolicy_new.setAction(vrfmp.getAction());
+      for (FaultManagementPolicy vrfmp : virtualDeploymentUnit.getFault_management_policy()) {
+        FaultManagementPolicy faultManagementPolicy_new = new FaultManagementPolicy();
+        faultManagementPolicy_new.setAction(vrfmp.getAction());
         Set<Criteria> criteriaSet = new HashSet<>();
         for (Criteria criteria : vrfmp.getCriteria()) {
           Criteria criteria_new = new Criteria();
@@ -295,15 +294,15 @@ public class VNFRUtils {
           criteria_new.setThreshold(criteria.getThreshold());
           criteriaSet.add(criteria_new);
         }
-        vrFaultManagementPolicy_new.setCriteria(criteriaSet);
-        vrFaultManagementPolicy_new.setName(vrfmp.getName());
-        vrFaultManagementPolicy_new.setPeriod(vrfmp.getPeriod());
-        vrFaultManagementPolicy_new.setSeverity(vrfmp.getSeverity());
-        vrFaultManagementPolicy_new.setVNFAlarm(vrfmp.isVNFAlarm());
-        vrFaultManagementPolicies.add(vrFaultManagementPolicy_new);
+        faultManagementPolicy_new.setCriteria(criteriaSet);
+        faultManagementPolicy_new.setName(vrfmp.getName());
+        faultManagementPolicy_new.setPeriod(vrfmp.getPeriod());
+        faultManagementPolicy_new.setSeverity(vrfmp.getSeverity());
+        faultManagementPolicy_new.setIsVNFAlarm(vrfmp.isVNFAlarm());
+        faultManagementPolicies.add(faultManagementPolicy_new);
       }
     }
-    vdu_new.setFault_management_policy(vrFaultManagementPolicies);
+    vdu_new.setFault_management_policy(faultManagementPolicies);
   }
 
   private static void setMonitoringParameters(
