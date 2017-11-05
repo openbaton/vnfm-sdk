@@ -53,13 +53,16 @@ import org.openbaton.common.vnfm_sdk.utils.VnfmUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
+import java.io.UnsupportedEncodingException;
 import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.Properties;
+import java.util.Scanner;
 import java.util.Set;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
@@ -529,11 +532,13 @@ public abstract class AbstractVnfm
     return null;
   }
 
-  private String getUserDataFromPackage(Set<Script> scripts) {
+  private String getUserDataFromPackage(Set<Script> scripts) throws UnsupportedEncodingException {
     String userdata = null;
     for (Script script : scripts) {
       if (script.getName().equals("userdata.sh") || script.getName().equals("user-data.sh")) {
-        userdata = new String(script.getPayload());
+        ByteArrayInputStream bis = new ByteArrayInputStream(script.getPayload());
+        Scanner s = new Scanner(bis).useDelimiter("\\A");
+        return s.hasNext() ? s.next() : "";
       }
     }
     return userdata;
@@ -753,9 +758,13 @@ public abstract class AbstractVnfm
 
         String userData = getUserData();
         if (customUserData != null) {
-          if (!customUserData.startsWith("#!") && userData.isEmpty())
+          char firstChar = customUserData.charAt(0);
+          customUserData = firstChar == '\uFEFF' ? customUserData.substring(1) : customUserData;
+          boolean customUserDataStartsWithShebang = customUserData.startsWith("#!");
+          boolean userDataIsEmpty = userData.isEmpty();
+          if (!customUserDataStartsWithShebang && userDataIsEmpty)
             throw new VnfmSdkException("Custom User Data does not have the shebang line!");
-          else if (!userData.isEmpty() && customUserData.startsWith("#!"))
+          else if (!userDataIsEmpty && customUserDataStartsWithShebang)
             throw new VnfmSdkException("Custom User Data starts with the shebang line and you are appending it to the already existing User Data! remove the shebang line from your User Data in the package.");
           userData += customUserData;
         }
