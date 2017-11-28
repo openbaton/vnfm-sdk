@@ -19,11 +19,18 @@ package org.openbaton.common.vnfm_sdk.utils;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-import org.openbaton.catalogue.mano.common.*;
+import org.openbaton.catalogue.mano.common.AutoScalePolicy;
+import org.openbaton.catalogue.mano.common.ConnectionPoint;
+import org.openbaton.catalogue.mano.common.DeploymentFlavour;
+import org.openbaton.catalogue.mano.common.HighAvailability;
+import org.openbaton.catalogue.mano.common.LifecycleEvent;
+import org.openbaton.catalogue.mano.common.ScalingAction;
+import org.openbaton.catalogue.mano.common.ScalingAlarm;
 import org.openbaton.catalogue.mano.common.faultmanagement.Criteria;
 import org.openbaton.catalogue.mano.common.faultmanagement.FaultManagementPolicy;
 import org.openbaton.catalogue.mano.descriptor.InternalVirtualLink;
@@ -37,7 +44,8 @@ import org.openbaton.catalogue.mano.record.VirtualLinkRecord;
 import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
 import org.openbaton.catalogue.nfvo.Configuration;
 import org.openbaton.catalogue.nfvo.ConfigurationParameter;
-import org.openbaton.catalogue.nfvo.VimInstance;
+import org.openbaton.catalogue.nfvo.viminstances.BaseVimInstance;
+import org.openbaton.catalogue.nfvo.viminstances.OpenstackVimInstance;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
 import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
 import org.slf4j.Logger;
@@ -53,7 +61,7 @@ public class VNFRUtils {
       String flavourKey,
       String nsr_id,
       Set<VirtualLinkRecord> vlr,
-      Map<String, Collection<VimInstance>> vimInstances)
+      Map<String, Collection<BaseVimInstance>> vimInstances)
       throws NotFoundException, BadFormatException {
     VirtualNetworkFunctionRecord virtualNetworkFunctionRecord = new VirtualNetworkFunctionRecord();
 
@@ -167,12 +175,13 @@ public class VNFRUtils {
   private static void setDeploymentFlavours(
       VirtualNetworkFunctionDescriptor vnfd,
       String flavourKey,
-      Map<String, Collection<VimInstance>> vimInstances,
+      Map<String, Collection<BaseVimInstance>> vimInstances,
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord)
       throws BadFormatException {
     virtualNetworkFunctionRecord.setDeployment_flavour_key(flavourKey);
     for (VirtualDeploymentUnit virtualDeploymentUnit : vnfd.getVdu()) {
-      Collection<VimInstance> vimInstancesTmp = vimInstances.get(virtualDeploymentUnit.getId());
+      Collection<? extends BaseVimInstance> vimInstancesTmp =
+          vimInstances.get(virtualDeploymentUnit.getId());
 
       if (vimInstancesTmp == null) {
         vimInstancesTmp = vimInstances.get(virtualDeploymentUnit.getName());
@@ -180,7 +189,7 @@ public class VNFRUtils {
       if (vimInstancesTmp == null) {
         vimInstancesTmp = vimInstances.get(virtualDeploymentUnit.getId());
       }
-      for (VimInstance vi : vimInstancesTmp) {
+      for (BaseVimInstance vi : vimInstancesTmp) {
         for (String name : virtualDeploymentUnit.getVimInstanceName()) {
           if (name.equals(vi.getName())) {
             if (!existsDeploymentFlavor(
@@ -206,38 +215,40 @@ public class VNFRUtils {
 
   private static void setVdu(
       VirtualNetworkFunctionDescriptor vnfd,
-      Map<String, Collection<VimInstance>> vimInstances,
+      Map<String, Collection<BaseVimInstance>> vimInstances,
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord) {
     virtualNetworkFunctionRecord.setVdu(new HashSet<>());
     for (VirtualDeploymentUnit virtualDeploymentUnit : vnfd.getVdu()) {
-      VirtualDeploymentUnit vdu_new = new VirtualDeploymentUnit();
-      vdu_new.setParent_vdu(virtualDeploymentUnit.getId());
-      vdu_new.setName(virtualDeploymentUnit.getName());
-      vdu_new.setVimInstanceName(virtualDeploymentUnit.getVimInstanceName());
-      vdu_new.setHostname(virtualDeploymentUnit.getHostname());
-      vdu_new.setComputation_requirement(virtualDeploymentUnit.getComputation_requirement());
-      vdu_new.setScale_in_out(virtualDeploymentUnit.getScale_in_out());
-      vdu_new.setVdu_constraint(virtualDeploymentUnit.getVdu_constraint());
-      vdu_new.setVirtual_network_bandwidth_resource(
+      VirtualDeploymentUnit vduNew = new VirtualDeploymentUnit();
+      vduNew.setMetadata(new HashMap<>());
+      virtualDeploymentUnit.getMetadata().forEach((k, v) -> vduNew.getMetadata().put(k, v));
+      vduNew.setParent_vdu(virtualDeploymentUnit.getId());
+      vduNew.setName(virtualDeploymentUnit.getName());
+      vduNew.setVimInstanceName(virtualDeploymentUnit.getVimInstanceName());
+      vduNew.setHostname(virtualDeploymentUnit.getHostname());
+      vduNew.setComputation_requirement(virtualDeploymentUnit.getComputation_requirement());
+      vduNew.setScale_in_out(virtualDeploymentUnit.getScale_in_out());
+      vduNew.setVdu_constraint(virtualDeploymentUnit.getVdu_constraint());
+      vduNew.setVirtual_network_bandwidth_resource(
           virtualDeploymentUnit.getVirtual_network_bandwidth_resource());
-      vdu_new.setVirtual_memory_resource_element(
+      vduNew.setVirtual_memory_resource_element(
           virtualDeploymentUnit.getVirtual_memory_resource_element());
 
-      setVnfComponents(virtualDeploymentUnit, vdu_new);
+      setVnfComponents(virtualDeploymentUnit, vduNew);
 
-      setVduLifeCycleEvents(virtualDeploymentUnit, vdu_new);
+      setVduLifeCycleEvents(virtualDeploymentUnit, vduNew);
 
-      setMonitoringParameters(virtualDeploymentUnit, vdu_new);
+      setMonitoringParameters(virtualDeploymentUnit, vduNew);
 
-      setHighAvailability(virtualDeploymentUnit, vdu_new);
+      setHighAvailability(virtualDeploymentUnit, vduNew);
 
-      setFaultManagementPolicies(virtualDeploymentUnit, vdu_new);
+      setFaultManagementPolicies(virtualDeploymentUnit, vduNew);
 
-      setVmImages(virtualDeploymentUnit, vdu_new);
+      setVmImages(virtualDeploymentUnit, vduNew);
 
-      setVimInstanceNames(vimInstances, virtualDeploymentUnit, vdu_new);
+      setVimInstanceNames(vimInstances, virtualDeploymentUnit, vduNew);
 
-      virtualNetworkFunctionRecord.getVdu().add(vdu_new);
+      virtualNetworkFunctionRecord.getVdu().add(vduNew);
     }
   }
 
@@ -251,16 +262,17 @@ public class VNFRUtils {
   }
 
   private static void setVimInstanceNames(
-      Map<String, Collection<VimInstance>> vimInstances,
+      Map<String, Collection<BaseVimInstance>> vimInstances,
       VirtualDeploymentUnit virtualDeploymentUnit,
       VirtualDeploymentUnit vdu_new) {
-    Collection<VimInstance> vimInstancesTmp = vimInstances.get(virtualDeploymentUnit.getId());
+    Collection<? extends BaseVimInstance> vimInstancesTmp =
+        vimInstances.get(virtualDeploymentUnit.getId());
     if (vimInstancesTmp == null) {
       vimInstancesTmp = vimInstances.get(virtualDeploymentUnit.getName());
     }
 
     Set<String> names = new LinkedHashSet<>();
-    for (VimInstance vi : vimInstancesTmp) {
+    for (BaseVimInstance vi : vimInstancesTmp) {
       names.add(vi.getName());
     }
     vdu_new.setVimInstanceName(names);
@@ -460,15 +472,18 @@ public class VNFRUtils {
     virtualNetworkFunctionRecord.setConfigurations(configuration);
   }
 
-  private static boolean existsDeploymentFlavor(String key, VimInstance vimInstance) {
-    log.debug("" + vimInstance);
-    for (DeploymentFlavour deploymentFlavour : vimInstance.getFlavours()) {
-      if (deploymentFlavour.getFlavour_key().equals(key)
-          || deploymentFlavour.getExtId().equals(key)
-          || deploymentFlavour.getId().equals(key)) {
-        return true;
+  private static boolean existsDeploymentFlavor(String key, BaseVimInstance vimInstance) {
+    if (vimInstance instanceof OpenstackVimInstance) {
+      OpenstackVimInstance openstackVimInstance = (OpenstackVimInstance) vimInstance;
+      for (DeploymentFlavour deploymentFlavour : openstackVimInstance.getFlavours()) {
+        if (deploymentFlavour.getFlavour_key().equals(key)
+            || deploymentFlavour.getExtId().equals(key)
+            || deploymentFlavour.getId().equals(key)) {
+          return true;
+        }
       }
+      return false;
     }
-    return false;
+    return true;
   }
 }

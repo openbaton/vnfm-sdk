@@ -16,6 +16,6 @@
  */
 
 dependencies {
-    compile 'org.openbaton:catalogue:5.0.0'
-    compile 'org.openbaton:common:5.0.0'
+    compile 'org.openbaton:catalogue:5.1.0-SNAPSHOT'
+    compile 'org.openbaton:common:5.1.0-SNAPSHOT'
 }

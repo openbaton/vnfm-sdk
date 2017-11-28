@@ -46,7 +46,6 @@ import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
 import org.openbaton.catalogue.nfvo.Action;
 import org.openbaton.catalogue.nfvo.EndpointType;
 import org.openbaton.catalogue.nfvo.Script;
-import org.openbaton.catalogue.nfvo.VimInstance;
 import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmErrorMessage;
@@ -59,6 +58,7 @@ import org.openbaton.catalogue.nfvo.messages.OrVnfmScalingMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmStartStopMessage;
 import org.openbaton.catalogue.nfvo.messages.OrVnfmUpdateMessage;
 import org.openbaton.catalogue.nfvo.messages.VnfmOrLogMessage;
+import org.openbaton.catalogue.nfvo.viminstances.BaseVimInstance;
 import org.openbaton.catalogue.security.Key;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
 import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
@@ -325,7 +325,7 @@ public abstract class AbstractVnfm
           log.debug("Keys are: " + orVnfmInstantiateMessage.getKeys());
           getExtension(extension);
 
-          Map<String, Collection<VimInstance>> vimInstances =
+          Map<String, Collection<BaseVimInstance>> vimInstances =
               orVnfmInstantiateMessage.getVimInstances();
           virtualNetworkFunctionRecord =
               createVirtualNetworkFunctionRecord(
@@ -334,6 +334,7 @@ public abstract class AbstractVnfm
                   orVnfmInstantiateMessage.getVlrs(),
                   orVnfmInstantiateMessage.getExtension(),
                   vimInstances);
+          log.trace("CREATE: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
           GrantOperation grantOperation = new GrantOperation();
           grantOperation.setVirtualNetworkFunctionRecord(virtualNetworkFunctionRecord);
 
@@ -345,14 +346,14 @@ public abstract class AbstractVnfm
               return null;
             }
           } catch (ExecutionException e) {
-            log.error("Got exception while allocating vms");
+            log.error("Got exception while granting vms");
             throw e.getCause();
           }
 
           virtualNetworkFunctionRecord = msg.getVirtualNetworkFunctionRecord();
-          Map<String, VimInstance> vimInstanceChosen = msg.getVduVim();
+          Map<String, BaseVimInstance> vimInstanceChosen = msg.getVduVim();
 
-          log.trace("VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
+          log.trace("GRANT: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
 
           if (!properties.getProperty("allocate", "true").equalsIgnoreCase("true")) {
             AllocateResources allocateResources = new AllocateResources();
@@ -373,6 +374,7 @@ public abstract class AbstractVnfm
               throw e.getCause();
             }
           }
+          log.trace("ALLOCATE: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
           setupProvides(virtualNetworkFunctionRecord);
 
           if (orVnfmInstantiateMessage.getVnfPackage() != null) {
@@ -608,7 +610,7 @@ public abstract class AbstractVnfm
       String flavourId,
       Set<VirtualLinkRecord> virtualLinkRecords,
       Map<String, String> extension,
-      Map<String, Collection<VimInstance>> vimInstances)
+      Map<String, Collection<BaseVimInstance>> vimInstances)
       throws BadFormatException, NotFoundException {
     try {
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord =
@@ -731,11 +733,11 @@ public abstract class AbstractVnfm
     private Set<Key> keyPairs;
     private String customUserData;
 
-    public void setVimInstances(Map<String, VimInstance> vimInstances) {
+    public void setVimInstances(Map<String, BaseVimInstance> vimInstances) {
       this.vimInstances = vimInstances;
     }
 
-    private Map<String, VimInstance> vimInstances;
+    private Map<String, BaseVimInstance> vimInstances;
 
     public VirtualNetworkFunctionRecord getVirtualNetworkFunctionRecord() {
       return virtualNetworkFunctionRecord;
