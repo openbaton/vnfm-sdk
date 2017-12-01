@@ -73,8 +73,11 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
   @Value("${vnfm.connect.tries.retryPause:2500}")
   private int retryPauseTries;
 
-  private int maxAuthenticationTries = 3;
-  private int baseRetryPauseAuthenticationTries = 40000;
+  @Value("${vnfm.connect.tries.authentication:3}")
+  private int maxAuthenticationTries;
+
+  @Value("${vnfm.connect.tries.authentication.retryPause:40000}")
+  private int baseRetryPauseAuthenticationTries;
 
   @Autowired
   @Qualifier("vnfmGson")
