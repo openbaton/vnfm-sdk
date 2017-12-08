@@ -18,12 +18,7 @@
 package org.openbaton.common.vnfm_sdk.amqp;
 
 import com.google.gson.Gson;
-import com.rabbitmq.client.AMQP;
-import com.rabbitmq.client.Channel;
-import com.rabbitmq.client.Connection;
-import com.rabbitmq.client.ConnectionFactory;
-import com.rabbitmq.client.DefaultConsumer;
-import com.rabbitmq.client.Envelope;
+import com.rabbitmq.client.*;
 import java.io.BufferedReader;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
@@ -36,6 +31,7 @@ import org.openbaton.common.vnfm_sdk.VnfmHelper;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
 import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
 import org.openbaton.registration.Registration;
+import org.springframework.amqp.AmqpAuthenticationException;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -73,6 +69,15 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
 
   @Value("${vnfm.connect.tries:20}")
   private int maxTries;
+
+  @Value("${vnfm.connect.tries.retryPause:2500}")
+  private int retryPauseTries;
+
+  @Value("${vnfm.connect.tries.authentication:3}")
+  private int maxAuthenticationTries;
+
+  @Value("${vnfm.connect.tries.authentication.retryPause:40000}")
+  private int baseRetryPauseAuthenticationTries;
 
   @Autowired
   @Qualifier("vnfmGson")
@@ -223,8 +228,8 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
         };
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
+    int authenticationTries = 0;
     int tries = 0;
-    Object res = null;
     if (maxTries < 0) maxTries = Integer.MAX_VALUE;
     while (true) {
       if (!tryToRegister[0]) {
@@ -236,13 +241,27 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
             registration.registerVnfmToNfvo(
                 ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
         break;
-      } catch (IllegalArgumentException e) {
-        log.debug("Registration failed: " + e.getMessage());
-        tries++;
-        if (tries >= (maxTries)) throw e;
-        log.debug("Try again in 2.5 seconds.");
+      } catch (AmqpAuthenticationException | IllegalArgumentException e) {
+        int retryPause = retryPauseTries;
+        if (e instanceof AmqpAuthenticationException) {
+          retryPause = baseRetryPauseAuthenticationTries * ((int) Math.pow(2, authenticationTries));
+          authenticationTries++;
+          log.debug(
+              "VNFM registration not successful. Waiting in case the NFVO has not created the RabbitMQ "
+                  + "'openbaton-manager-user' user yet: "
+                  + (maxAuthenticationTries - authenticationTries)
+                  + " attempt(s) left");
+        } else {
+          log.debug("Registration failed: " + e.getMessage());
+          tries++;
+        }
+        if ((tries >= (maxTries)) || (authenticationTries >= (maxAuthenticationTries))) {
+          e.printStackTrace();
+          System.exit(1);
+        }
         try {
-          Thread.sleep(2500);
+          log.debug("Try again in " + retryPause / 1000 + " seconds.");
+          Thread.sleep(retryPause);
         } catch (InterruptedException e1) {
           e1.printStackTrace();
         }
