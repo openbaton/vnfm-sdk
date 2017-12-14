@@ -33,8 +33,6 @@ import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.VnfmHelper;
 import org.openbaton.common.vnfm_sdk.exception.VnfmSdkException;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
@@ -72,6 +70,7 @@ public class VnfmRestHelper extends VnfmHelper {
 
   @Value("${vnfm.endpoint.type:RABBIT}")
   private EndpointType vnfmEndpointType;
+
   @Value("${vnfm.enabled:true}")
   private boolean enabled;
 

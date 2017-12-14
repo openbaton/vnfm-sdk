@@ -139,7 +139,8 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
                 }
               }
             };
-        channel.basicConsume(((VnfmSpringHelperRabbit) vnfmHelper).getVnfmEndpoint(), false, consumer);
+        channel.basicConsume(
+            ((VnfmSpringHelperRabbit) vnfmHelper).getVnfmEndpoint(), false, consumer);
 
         //loop to prevent reaching finally block
         while (true) {
@@ -215,8 +216,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
 
     final boolean[] tryToRegister = {true};
 
-    Thread shutdownHook =
-        new Thread(() -> tryToRegister[0] = false);
+    Thread shutdownHook = new Thread(() -> tryToRegister[0] = false);
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
     int authenticationTries = 0;
@@ -275,8 +275,8 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
               "openbaton-exchange");
     } catch (IOException | TimeoutException e) {
       e.printStackTrace();
-        unregister();
-    System.exit(34);
+      unregister();
+      System.exit(34);
     }
 
     log.info("Correctly registered to NFVO");

@@ -21,13 +21,10 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
-
 import java.io.IOException;
 import java.io.Serializable;
-import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
-
 import org.openbaton.catalogue.nfvo.EndpointType;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.VnfmHelper;
@@ -40,9 +37,7 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-/**
- * Created by lto on 23/09/15.
- */
+/** Created by lto on 23/09/15. */
 @Service
 @Scope
 @ConfigurationProperties
@@ -101,7 +96,6 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
     this.gson = gson;
   }
 
-
   public String getVirtualHost() {
     return virtualHost;
   }
@@ -114,8 +108,7 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
     this.rabbitTemplate = rabbitTemplate;
   }
 
-  @Autowired
-  private RabbitTemplate rabbitTemplate;
+  @Autowired private RabbitTemplate rabbitTemplate;
 
   @Value("${vnfm.rabbitmq.sar.timeout:1000}")
   private int timeout;
