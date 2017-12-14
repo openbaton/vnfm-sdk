@@ -139,7 +139,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
                 }
               }
             };
-        channel.basicConsume(getEndpoint(), false, consumer);
+        channel.basicConsume(((VnfmSpringHelperRabbit) vnfmHelper).getVnfmEndpoint(), false, consumer);
 
         //loop to prevent reaching finally block
         while (true) {
@@ -189,16 +189,12 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
           ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
       ((VnfmSpringHelperRabbit) vnfmHelper)
           .deleteQueue(
-              properties.getProperty("endpoint"),
+              ((VnfmSpringHelperRabbit) vnfmHelper).getVnfmEndpoint(),
               rabbitHost,
               rabbitPort,
               rabbitUsername,
               rabbitPassword);
-    } catch (IllegalStateException e) {
-      log.error("Got exception while deregistering the VNFM from the NFVO");
-    } catch (TimeoutException e) {
-      log.error("Got exception while deregistering the VNFM from the NFVO");
-    } catch (IOException e) {
+    } catch (IllegalStateException | TimeoutException | IOException e) {
       log.error("Got exception while deregistering the VNFM from the NFVO");
     }
   }
@@ -220,12 +216,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
     final boolean[] tryToRegister = {true};
 
     Thread shutdownHook =
-        new Thread() {
-          public void run() {
-            tryToRegister[0] = false;
-            return;
-          }
-        };
+        new Thread(() -> tryToRegister[0] = false);
     Runtime.getRuntime().addShutdownHook(shutdownHook);
 
     int authenticationTries = 0;
@@ -280,12 +271,12 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
               rabbitUsername,
               rabbitPassword,
               virtualHost,
-              properties.getProperty("endpoint"),
+              vnfmHelper.getVnfmEndpoint(),
               "openbaton-exchange");
-    } catch (IOException e) {
+    } catch (IOException | TimeoutException e) {
       e.printStackTrace();
-    } catch (TimeoutException e) {
-      e.printStackTrace();
+        unregister();
+    System.exit(34);
     }
 
     log.info("Correctly registered to NFVO");

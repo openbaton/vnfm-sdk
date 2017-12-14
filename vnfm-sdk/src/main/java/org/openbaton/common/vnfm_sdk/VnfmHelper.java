@@ -17,6 +17,7 @@
 
 package org.openbaton.common.vnfm_sdk;
 
+import org.openbaton.catalogue.nfvo.EndpointType;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,9 +27,25 @@ public abstract class VnfmHelper {
 
   protected Logger log = LoggerFactory.getLogger(this.getClass());
 
+  public abstract String getVnfmType();
+
+  public abstract void setVnfmType(String vnfmType);
+
+  public abstract String getVnfmEndpoint();
+
+  public abstract void setVnfmEndpoint(String vnfmEndpoint);
+
+  public abstract EndpointType getVnfmEndpointType();
+
+  public abstract void setVnfmEndpointType(EndpointType vnfmEndpointType);
+
   public abstract void sendToNfvo(NFVMessage nfvMessage);
 
   public abstract NFVMessage sendAndReceive(NFVMessage nfvMessage) throws Exception;
 
   public abstract String sendAndReceive(String message, String queueName) throws Exception;
+
+  public abstract String getVnfmDescription();
+
+  public abstract boolean isVnfmEnabled();
 }

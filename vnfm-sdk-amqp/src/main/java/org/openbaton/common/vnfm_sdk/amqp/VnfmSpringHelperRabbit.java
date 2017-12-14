@@ -21,10 +21,14 @@ import com.google.gson.Gson;
 import com.rabbitmq.client.Channel;
 import com.rabbitmq.client.Connection;
 import com.rabbitmq.client.ConnectionFactory;
+
 import java.io.IOException;
 import java.io.Serializable;
+import java.util.Properties;
 import java.util.concurrent.TimeoutException;
 import javax.annotation.PostConstruct;
+
+import org.openbaton.catalogue.nfvo.EndpointType;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.VnfmHelper;
 import org.openbaton.common.vnfm_sdk.amqp.configuration.RabbitConfiguration;
@@ -36,7 +40,9 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-/** Created by lto on 23/09/15. */
+/**
+ * Created by lto on 23/09/15.
+ */
 @Service
 @Scope
 @ConfigurationProperties
@@ -55,10 +61,61 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
   @Value("${vnfm.rabbitmq.exclusive}")
   private boolean exclusive;
 
+  @Value("${vnfm.type:unknown}")
+  private String vnfmType;
+
+  @Value("${vnfm.enabled:true}")
+  private boolean enabled;
+
+  @Override
+  public String getVnfmDescription() {
+    return vnfmDescription;
+  }
+
+  @Override
+  public boolean isVnfmEnabled() {
+    return this.enabled;
+  }
+
+  public void setVnfmDescription(String vnfmDescription) {
+    this.vnfmDescription = vnfmDescription;
+  }
+
+  @Value("${vnfm.description:unknown}")
+  private String vnfmDescription;
+
+  @Value("${vnfm.endpoint:unknown}")
+  private String vnfmEndpoint;
+
+  @Value("${vnfm.endpoint.type:RABBIT}")
+  private EndpointType vnfmEndpointType;
+
   @Value("${vnfm.rabbitmq.virtual-host:/}")
   private String virtualHost;
 
-  @Autowired private RabbitTemplate rabbitTemplate;
+  public Gson getGson() {
+    return gson;
+  }
+
+  public void setGson(Gson gson) {
+    this.gson = gson;
+  }
+
+
+  public String getVirtualHost() {
+    return virtualHost;
+  }
+
+  public void setVirtualHost(String virtualHost) {
+    this.virtualHost = virtualHost;
+  }
+
+  public void setRabbitTemplate(RabbitTemplate rabbitTemplate) {
+    this.rabbitTemplate = rabbitTemplate;
+  }
+
+  @Autowired
+  private RabbitTemplate rabbitTemplate;
 
   @Value("${vnfm.rabbitmq.sar.timeout:1000}")
   private int timeout;
@@ -110,6 +167,36 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
   }
 
   @Override
+  public String getVnfmType() {
+    return this.vnfmType;
+  }
+
+  @Override
+  public void setVnfmType(String vnfmType) {
+    this.vnfmType = vnfmType;
+  }
+
+  @Override
+  public String getVnfmEndpoint() {
+    return this.vnfmEndpoint;
+  }
+
+  @Override
+  public void setVnfmEndpoint(String vnfmEndpoint) {
+    this.vnfmEndpoint = vnfmEndpoint;
+  }
+
+  @Override
+  public EndpointType getVnfmEndpointType() {
+    return this.vnfmEndpointType;
+  }
+
+  @Override
+  public void setVnfmEndpointType(EndpointType vnfmEndpointType) {
+    this.vnfmEndpointType = vnfmEndpointType;
+  }
+
+  @Override
   public void sendToNfvo(final NFVMessage nfvMessage) {
     sendMessageToQueue(RabbitConfiguration.queueName_vnfmCoreActions, nfvMessage);
   }
@@ -158,18 +245,6 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
       String queue,
       String exchange)
       throws IOException, TimeoutException {
-    //    rabbitAdmin = new RabbitAdmin(this.rabbitTemplate.getConnectionFactory());
-    //
-    //    rabbitAdmin.declareQueue(
-    //        new Queue(RabbitConfiguration.queueName_vnfmRegister, true, exclusive, autodelete));
-    //    rabbitAdmin.declareBinding(
-    //        new Binding(
-    //            RabbitConfiguration.queueName_vnfmRegister,
-    //            Binding.DestinationType.QUEUE,
-    //            "openbaton-exchange",
-    //            RabbitConfiguration.queueName_vnfmRegister,
-    //            null));
-
     ConnectionFactory factory =
         getConnectionFactory(brokerIp, port, rabbitUsername, rabbitPassword, virtualHost);
     Connection connection = factory.newConnection();

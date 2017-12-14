@@ -28,6 +28,7 @@ import org.apache.http.conn.ssl.NoopHostnameVerifier;
 import org.apache.http.conn.ssl.TrustSelfSignedStrategy;
 import org.apache.http.ssl.SSLContexts;
 import org.openbaton.catalogue.nfvo.Action;
+import org.openbaton.catalogue.nfvo.EndpointType;
 import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.VnfmHelper;
@@ -36,6 +37,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
 import org.springframework.http.HttpEntity;
@@ -61,7 +63,34 @@ public class VnfmRestHelper extends VnfmHelper {
   private RestTemplate rest;
   private HttpHeaders headers;
   private HttpStatus status;
-  private Logger log = LoggerFactory.getLogger(this.getClass());
+
+  @Value("${vnfm.type:unknown}")
+  private String vnfmType;
+
+  @Value("${vnfm.endpoint:unknown}")
+  private String vnfmEndpoint;
+
+  @Value("${vnfm.endpoint.type:RABBIT}")
+  private EndpointType vnfmEndpointType;
+  @Value("${vnfm.enabled:true}")
+  private boolean enabled;
+
+  @Override
+  public String getVnfmDescription() {
+    return vnfmDescription;
+  }
+
+  @Override
+  public boolean isVnfmEnabled() {
+    return this.enabled;
+  }
+
+  public void setVnfmDescription(String vnfmDescription) {
+    this.vnfmDescription = vnfmDescription;
+  }
+
+  @Value("${vnfm.description:unknown}")
+  private String vnfmDescription;
 
   @Autowired
   @Qualifier("vnfmGson")
@@ -93,6 +122,36 @@ public class VnfmRestHelper extends VnfmHelper {
 
   public void sendMessageToQueue(String sendToQueueName, Serializable message) {
     this.post("admin/v1/vnfm-core-actions", gson.toJson(message));
+  }
+
+  @Override
+  public String getVnfmType() {
+    return this.vnfmType;
+  }
+
+  @Override
+  public void setVnfmType(String vnfmType) {
+    this.vnfmType = vnfmType;
+  }
+
+  @Override
+  public String getVnfmEndpoint() {
+    return this.vnfmEndpoint;
+  }
+
+  @Override
+  public void setVnfmEndpoint(String vnfmEndpoint) {
+    this.vnfmEndpoint = vnfmEndpoint;
+  }
+
+  @Override
+  public EndpointType getVnfmEndpointType() {
+    return this.vnfmEndpointType;
+  }
+
+  @Override
+  public void setVnfmEndpointType(EndpointType vnfmEndpointType) {
+    this.vnfmEndpointType = vnfmEndpointType;
   }
 
   @Override
@@ -230,6 +289,7 @@ public class VnfmRestHelper extends VnfmHelper {
 
       if (connection instanceof HttpsURLConnection) {
         ((HttpsURLConnection) connection).setHostnameVerifier(new NoopHostnameVerifier());
+        assert sslContext != null;
         ((HttpsURLConnection) connection).setSSLSocketFactory(sslContext.getSocketFactory());
       }
       super.prepareConnection(connection, httpMethod);
@@ -237,9 +297,7 @@ public class VnfmRestHelper extends VnfmHelper {
 
     private SSLContext getSslContext() {
       try {
-        SSLContext sslContext =
-            SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
-        return sslContext;
+        return SSLContexts.custom().loadTrustMaterial(null, new TrustSelfSignedStrategy()).build();
       } catch (Exception e) {
         log.error("An exception was thrown while retrieving the SSLContext.");
         e.printStackTrace();

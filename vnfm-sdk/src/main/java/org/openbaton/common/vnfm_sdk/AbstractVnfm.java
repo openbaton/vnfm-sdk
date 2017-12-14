@@ -677,13 +677,12 @@ public abstract class AbstractVnfm
   protected void setup() {
     loadProperties();
     vnfmManagerEndpoint = new VnfmManagerEndpoint();
-    vnfmManagerEndpoint.setType(this.type);
-    vnfmManagerEndpoint.setDescription(this.description);
-    vnfmManagerEndpoint.setEnabled(this.enabled);
+    vnfmManagerEndpoint.setType(vnfmHelper.getVnfmType());
+    vnfmManagerEndpoint.setDescription(vnfmHelper.getVnfmDescription());
+    vnfmManagerEndpoint.setEnabled(vnfmHelper.isVnfmEnabled());
     vnfmManagerEndpoint.setActive(true);
-    vnfmManagerEndpoint.setEndpoint(this.endpoint);
-    log.debug("creating VnfmManagerEndpoint for vnfm endpointType: " + this.endpointType);
-    vnfmManagerEndpoint.setEndpointType(EndpointType.valueOf(this.endpointType));
+    vnfmManagerEndpoint.setEndpoint(vnfmHelper.getVnfmEndpoint());
+    vnfmManagerEndpoint.setEndpointType(vnfmHelper.getVnfmEndpointType());
   }
 
   class GrantOperation implements Callable<OrVnfmGrantLifecycleOperationMessage> {
