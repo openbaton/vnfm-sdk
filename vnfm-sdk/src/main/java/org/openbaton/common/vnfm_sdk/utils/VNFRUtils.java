@@ -24,6 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
+
 import org.openbaton.catalogue.mano.common.AutoScalePolicy;
 import org.openbaton.catalogue.mano.common.ConnectionPoint;
 import org.openbaton.catalogue.mano.common.DeploymentFlavour;
@@ -51,7 +52,9 @@ import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/** Created by mob on 31.08.15. */
+/**
+ * Created by mob on 31.08.15.
+ */
 public class VNFRUtils {
 
   private static Logger log = LoggerFactory.getLogger(VNFRUtils.class);
@@ -209,7 +212,7 @@ public class VNFRUtils {
   private static void setConnectionPoints(
       VirtualNetworkFunctionDescriptor vnfd,
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord) {
-    virtualNetworkFunctionRecord.setConnection_point(new HashSet<ConnectionPoint>());
+    virtualNetworkFunctionRecord.setConnection_point(new HashSet<>());
     virtualNetworkFunctionRecord.getConnection_point().addAll(vnfd.getConnection_point());
   }
 
@@ -343,16 +346,21 @@ public class VNFRUtils {
       VNFComponent component_new = new VNFComponent();
       HashSet<VNFDConnectionPoint> connectionPoints = new HashSet<>();
       for (VNFDConnectionPoint connectionPoint : component.getConnection_point()) {
-        VNFDConnectionPoint connectionPoint_new = new VNFDConnectionPoint();
-        connectionPoint_new.setVirtual_link_reference(connectionPoint.getVirtual_link_reference());
-        connectionPoint_new.setChosenPool(connectionPoint.getChosenPool());
-        connectionPoint_new.setVirtual_link_reference_id(
+        VNFDConnectionPoint connectionPointNew = new VNFDConnectionPoint();
+        connectionPointNew.setVirtual_link_reference(connectionPoint.getVirtual_link_reference());
+        connectionPointNew.setChosenPool(connectionPoint.getChosenPool());
+        connectionPointNew.setVirtual_link_reference_id(
             connectionPoint.getVirtual_link_reference_id());
-        connectionPoint_new.setType(connectionPoint.getType());
-        connectionPoint_new.setFloatingIp(connectionPoint.getFloatingIp());
-        connectionPoint_new.setFixedIp(connectionPoint.getFixedIp());
-        connectionPoint_new.setInterfaceId(connectionPoint.getInterfaceId());
-        connectionPoints.add(connectionPoint_new);
+        connectionPointNew.setType(connectionPoint.getType());
+        connectionPointNew.setFloatingIp(connectionPoint.getFloatingIp());
+        connectionPointNew.setFixedIp(connectionPoint.getFixedIp());
+        connectionPointNew.setInterfaceId(connectionPoint.getInterfaceId());
+        if (connectionPoint.getMetadata() != null)
+          connectionPoint.getMetadata().forEach((k, v) -> {
+            connectionPointNew.setMetadata(new HashMap<>());
+            connectionPointNew.getMetadata().put(k, v);
+          });
+        connectionPoints.add(connectionPointNew);
       }
       component_new.setConnection_point(connectionPoints);
       vnfComponents.add(component_new);
