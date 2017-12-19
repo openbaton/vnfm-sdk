@@ -231,6 +231,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
         usernamePassword =
             registration.registerVnfmToNfvo(
                 ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
+        log.debug("Obtained credentials for new user: " + usernamePassword[0]);
         break;
       } catch (AmqpAuthenticationException | IllegalArgumentException e) {
         int retryPause = retryPauseTries;
