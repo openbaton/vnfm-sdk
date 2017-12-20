@@ -24,9 +24,7 @@ import java.util.HashSet;
 import java.util.LinkedHashSet;
 import java.util.Map;
 import java.util.Set;
-
 import org.openbaton.catalogue.mano.common.AutoScalePolicy;
-import org.openbaton.catalogue.mano.common.ConnectionPoint;
 import org.openbaton.catalogue.mano.common.DeploymentFlavour;
 import org.openbaton.catalogue.mano.common.HighAvailability;
 import org.openbaton.catalogue.mano.common.LifecycleEvent;
@@ -52,9 +50,7 @@ import org.openbaton.common.vnfm_sdk.exception.NotFoundException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-/**
- * Created by mob on 31.08.15.
- */
+/** Created by mob on 31.08.15. */
 public class VNFRUtils {
 
   private static Logger log = LoggerFactory.getLogger(VNFRUtils.class);
@@ -356,10 +352,13 @@ public class VNFRUtils {
         connectionPointNew.setFixedIp(connectionPoint.getFixedIp());
         connectionPointNew.setInterfaceId(connectionPoint.getInterfaceId());
         if (connectionPoint.getMetadata() != null)
-          connectionPoint.getMetadata().forEach((k, v) -> {
-            connectionPointNew.setMetadata(new HashMap<>());
-            connectionPointNew.getMetadata().put(k, v);
-          });
+          connectionPoint
+              .getMetadata()
+              .forEach(
+                  (k, v) -> {
+                    connectionPointNew.setMetadata(new HashMap<>());
+                    connectionPointNew.getMetadata().put(k, v);
+                  });
         connectionPoints.add(connectionPointNew);
       }
       component_new.setConnection_point(connectionPoints);
