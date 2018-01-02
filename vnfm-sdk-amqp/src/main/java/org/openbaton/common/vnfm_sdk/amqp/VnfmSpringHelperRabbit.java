@@ -213,11 +213,10 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
     rabbitTemplate.setReplyTimeout(timeout * 1000);
     rabbitTemplate.afterPropertiesSet();
 
-    log.debug("Sending to: " + queueName.toLowerCase().replace("_", "-"));
+    queueName = queueName.replace("_", "-");
+    log.debug("Sending to: " + queueName);
     String res =
-        (String)
-            rabbitTemplate.convertSendAndReceive(
-                "openbaton-exchange", queueName.toLowerCase().replace("_", "-"), message);
+        (String) rabbitTemplate.convertSendAndReceive("openbaton-exchange", queueName, message);
     log.trace("Received from EMS: " + res);
     if (res == null) {
       log.error("After " + timeout + " seconds the ems did not answer.");
