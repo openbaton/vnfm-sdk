@@ -213,7 +213,7 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
     rabbitTemplate.setReplyTimeout(timeout * 1000);
     rabbitTemplate.afterPropertiesSet();
 
-//    queueName = queueName.replace("_", "-");
+    //    queueName = queueName.replace("_", "-");
     log.debug("Sending to: " + queueName);
     String res =
         (String) rabbitTemplate.convertSendAndReceive("openbaton-exchange", queueName, message);

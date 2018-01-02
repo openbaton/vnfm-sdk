@@ -758,13 +758,13 @@ public abstract class AbstractVnfm
         if (customUserData != null) {
           char firstChar = customUserData.charAt(0);
           customUserData = firstChar == '\uFEFF' ? customUserData.substring(1) : customUserData;
-          boolean customUserDataStartsWithShebang = customUserData.startsWith("#!");
-          boolean userDataIsEmpty = userData.isEmpty();
-          if (!customUserDataStartsWithShebang && userDataIsEmpty)
-            throw new VnfmSdkException("Custom User Data does not have the shebang line!");
-          else if (!userDataIsEmpty && customUserDataStartsWithShebang)
-            throw new VnfmSdkException(
-                "Custom User Data starts with the shebang line and you are appending it to the already existing User Data! remove the shebang line from your User Data in the package.");
+          //          boolean customUserDataStartsWithShebang = customUserData.startsWith("#!");
+          //          boolean userDataIsEmpty = userData.isEmpty();
+          //          if (!customUserDataStartsWithShebang && userDataIsEmpty)
+          //            throw new VnfmSdkException("Custom User Data does not have the shebang line!");
+          //          else if (!userDataIsEmpty && customUserDataStartsWithShebang)
+          //            throw new VnfmSdkException(
+          //                "Custom User Data starts with the shebang line and you are appending it to the already existing User Data! remove the shebang line from your User Data in the package.");
           userData += customUserData;
         }
         log.debug("Userdata sent to NFVO: " + userData);
