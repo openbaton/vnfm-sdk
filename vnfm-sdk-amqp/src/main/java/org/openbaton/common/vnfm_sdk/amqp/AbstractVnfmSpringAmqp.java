@@ -24,6 +24,8 @@ import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.TimeoutException;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
 import org.openbaton.common.vnfm_sdk.AbstractVnfm;
@@ -43,7 +45,6 @@ import org.springframework.context.event.ContextClosedEvent;
 import org.springframework.context.event.ContextRefreshedEvent;
 import org.springframework.context.event.EventListener;
 
-/** Created by lto on 28/05/15. */
 @SpringBootApplication
 @ComponentScan(basePackages = "org.openbaton")
 @ConfigurationProperties
@@ -86,8 +87,11 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
   @Autowired private ConfigurableApplicationContext context;
   @Autowired private Registration registration;
 
+  private ExecutorService executor;
+
   @Override
   protected void setup() {
+    executor = Executors.newCachedThreadPool();
     vnfmHelper = (VnfmHelper) context.getBean("vnfmSpringHelperRabbit");
     super.setup();
   }
@@ -101,6 +105,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
       connectionFactory.setUsername(rabbitUsername);
       connectionFactory.setPassword(rabbitPassword);
       connectionFactory.setVirtualHost(virtualHost);
+
       try (Connection connection = connectionFactory.newConnection()) {
         final Channel channel = connection.createChannel();
         channel.basicQos(1);
@@ -114,33 +119,44 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
                   AMQP.BasicProperties properties,
                   byte[] body)
                   throws IOException {
-                AMQP.BasicProperties replyProps =
-                    new AMQP.BasicProperties.Builder()
-                        .correlationId(properties.getCorrelationId())
-                        .contentType("plain/text")
-                        .build();
 
-                NFVMessage answerMessage = null;
-                try {
-                  NFVMessage nfvMessage =
-                      gson.fromJson(
-                          getStringFromInputStream(new ByteArrayInputStream(body)),
-                          NFVMessage.class);
+                executor.execute(
+                    () -> {
+                      AMQP.BasicProperties replyProps =
+                          new AMQP.BasicProperties.Builder()
+                              .correlationId(properties.getCorrelationId())
+                              .contentType("plain/text")
+                              .build();
 
-                  answerMessage = onAction(nfvMessage);
-                } catch (NotFoundException | BadFormatException e) {
-                  log.error("Error while processing message from NFVO");
-                  e.printStackTrace();
-                } finally {
-                  String answer = gson.toJson(answerMessage);
-                  channel.basicPublish(
-                      "", properties.getReplyTo(), replyProps, answer.getBytes("UTF-8"));
-                  channel.basicAck(envelope.getDeliveryTag(), false);
-                }
+                      NFVMessage answerMessage = null;
+                      try {
+                        NFVMessage nfvMessage =
+                            gson.fromJson(
+                                getStringFromInputStream(new ByteArrayInputStream(body)),
+                                NFVMessage.class);
+
+                        answerMessage = onAction(nfvMessage);
+                      } catch (NotFoundException | BadFormatException e) {
+                        log.error("Error while processing message from NFVO");
+                        e.printStackTrace();
+                      } finally {
+                        String answer = gson.toJson(answerMessage);
+                        try {
+                          channel.basicPublish(
+                              "", properties.getReplyTo(), replyProps, answer.getBytes("UTF-8"));
+                          channel.basicAck(envelope.getDeliveryTag(), false);
+                        } catch (IOException e) {
+                          log.error(
+                              String.format(
+                                  "Thread %s got an exception: %s",
+                                  Thread.currentThread().getName(), e.getMessage()));
+                          e.printStackTrace();
+                        }
+                      }
+                    });
               }
             };
-        channel.basicConsume(
-            ((VnfmSpringHelperRabbit) vnfmHelper).getVnfmEndpoint(), false, consumer);
+        channel.basicConsume(vnfmHelper.getVnfmEndpoint(), false, consumer);
 
         //loop to prevent reaching finally block
         while (true) {
@@ -190,11 +206,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
           ((VnfmSpringHelperRabbit) vnfmHelper).getRabbitTemplate(), vnfmManagerEndpoint);
       ((VnfmSpringHelperRabbit) vnfmHelper)
           .deleteQueue(
-              ((VnfmSpringHelperRabbit) vnfmHelper).getVnfmEndpoint(),
-              rabbitHost,
-              rabbitPort,
-              rabbitUsername,
-              rabbitPassword);
+              vnfmHelper.getVnfmEndpoint(), rabbitHost, rabbitPort, rabbitUsername, rabbitPassword);
     } catch (IllegalStateException | TimeoutException | IOException e) {
       log.error("Got exception while deregistering the VNFM from the NFVO");
     }
