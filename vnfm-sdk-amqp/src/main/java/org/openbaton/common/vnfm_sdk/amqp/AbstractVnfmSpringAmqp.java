@@ -144,7 +144,7 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
                         try {
                           channel.basicPublish(
                               "", properties.getReplyTo(), replyProps, answer.getBytes("UTF-8"));
-                          channel.basicAck(envelope.getDeliveryTag(), false);
+
                         } catch (IOException e) {
                           log.error(
                               String.format(
@@ -154,17 +154,25 @@ public abstract class AbstractVnfmSpringAmqp extends AbstractVnfm {
                         }
                       }
                     });
+                channel.basicAck(envelope.getDeliveryTag(), false);
+                log.trace(String.format("Ack %d", envelope.getDeliveryTag()));
+
+                synchronized (this) {
+                  this.notify();
+                }
               }
             };
         channel.basicConsume(vnfmHelper.getVnfmEndpoint(), false, consumer);
 
         //loop to prevent reaching finally block
         while (true) {
-          try {
-            Thread.sleep(500);
-          } catch (InterruptedException e) {
-            log.info("Ctrl-c received");
-            System.exit(0);
+          synchronized (consumer) {
+            try {
+              consumer.wait();
+            } catch (InterruptedException e) {
+              log.info("Ctrl-c received");
+              System.exit(0);
+            }
           }
         }
       } catch (IOException | TimeoutException e) {
