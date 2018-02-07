@@ -326,56 +326,58 @@ public abstract class AbstractVnfm
 
           Map<String, Collection<BaseVimInstance>> vimInstances =
               orVnfmInstantiateMessage.getVimInstances();
-          virtualNetworkFunctionRecord =
-              createVirtualNetworkFunctionRecord(
-                  orVnfmInstantiateMessage.getVnfd(),
-                  orVnfmInstantiateMessage.getVnfdf().getFlavour_key(),
-                  orVnfmInstantiateMessage.getVlrs(),
-                  orVnfmInstantiateMessage.getExtension(),
-                  vimInstances);
-          log.trace("CREATE: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
-          GrantOperation grantOperation = new GrantOperation();
-          grantOperation.setVirtualNetworkFunctionRecord(virtualNetworkFunctionRecord);
+          if (orVnfmInstantiateMessage.getVnfr() == null) {
+            virtualNetworkFunctionRecord =
+                createVirtualNetworkFunctionRecord(
+                    orVnfmInstantiateMessage.getVnfd(),
+                    orVnfmInstantiateMessage.getVnfdf().getFlavour_key(),
+                    orVnfmInstantiateMessage.getVlrs(),
+                    orVnfmInstantiateMessage.getExtension(),
+                    vimInstances);
 
-          Future<OrVnfmGrantLifecycleOperationMessage> result = executor.submit(grantOperation);
-          OrVnfmGrantLifecycleOperationMessage msg;
-          try {
-            msg = result.get();
-            if (msg == null) {
-              return null;
-            }
-          } catch (ExecutionException e) {
-            log.error("Got exception while granting vms");
-            throw e.getCause();
-          }
+            log.trace("CREATE: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
+            GrantOperation grantOperation = new GrantOperation();
+            grantOperation.setVirtualNetworkFunctionRecord(virtualNetworkFunctionRecord);
 
-          virtualNetworkFunctionRecord = msg.getVirtualNetworkFunctionRecord();
-          Map<String, BaseVimInstance> vimInstanceChosen = msg.getVduVim();
-
-          log.trace("GRANT: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
-
-          if (!properties.getProperty("allocate", "true").equalsIgnoreCase("true")) {
-            AllocateResources allocateResources = new AllocateResources();
-            allocateResources.setVirtualNetworkFunctionRecord(virtualNetworkFunctionRecord);
-            allocateResources.setVimInstances(vimInstanceChosen);
-            allocateResources.setKeyPairs(orVnfmInstantiateMessage.getKeys());
-            if (orVnfmInstantiateMessage.getVnfPackage() != null
-                && orVnfmInstantiateMessage.getVnfPackage().getScripts() != null)
-              allocateResources.setCustomUserData(
-                  getUserDataFromPackage(orVnfmInstantiateMessage.getVnfPackage().getScripts()));
+            Future<OrVnfmGrantLifecycleOperationMessage> result = executor.submit(grantOperation);
+            OrVnfmGrantLifecycleOperationMessage msg;
             try {
-              virtualNetworkFunctionRecord = executor.submit(allocateResources).get();
-              if (virtualNetworkFunctionRecord == null) {
+              msg = result.get();
+              if (msg == null) {
                 return null;
               }
             } catch (ExecutionException e) {
-              log.error("Got exception while allocating vms");
+              log.error("Got exception while granting vms");
               throw e.getCause();
             }
-          }
-          log.trace("ALLOCATE: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
-          setupProvides(virtualNetworkFunctionRecord);
 
+            virtualNetworkFunctionRecord = msg.getVirtualNetworkFunctionRecord();
+            Map<String, BaseVimInstance> vimInstanceChosen = msg.getVduVim();
+
+            log.trace("GRANT: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
+
+            if (!properties.getProperty("allocate", "true").equalsIgnoreCase("true")) {
+              AllocateResources allocateResources = new AllocateResources();
+              allocateResources.setVirtualNetworkFunctionRecord(virtualNetworkFunctionRecord);
+              allocateResources.setVimInstances(vimInstanceChosen);
+              allocateResources.setKeyPairs(orVnfmInstantiateMessage.getKeys());
+              if (orVnfmInstantiateMessage.getVnfPackage() != null
+                  && orVnfmInstantiateMessage.getVnfPackage().getScripts() != null)
+                allocateResources.setCustomUserData(
+                    getUserDataFromPackage(orVnfmInstantiateMessage.getVnfPackage().getScripts()));
+              try {
+                virtualNetworkFunctionRecord = executor.submit(allocateResources).get();
+                if (virtualNetworkFunctionRecord == null) {
+                  return null;
+                }
+              } catch (ExecutionException e) {
+                log.error("Got exception while allocating vms");
+                throw e.getCause();
+              }
+            }
+            log.trace("ALLOCATE: HB VERSION IS: " + virtualNetworkFunctionRecord.getHbVersion());
+            setupProvides(virtualNetworkFunctionRecord);
+          } else virtualNetworkFunctionRecord = orVnfmInstantiateMessage.getVnfr();
           if (orVnfmInstantiateMessage.getVnfPackage() != null) {
             if (orVnfmInstantiateMessage.getVnfPackage().getScriptsLink() != null) {
               virtualNetworkFunctionRecord =
