@@ -41,6 +41,7 @@ ext {
      * Junit Version
      */
     junitVersion = "4.12"
+    openbatonVersion = "5.2.0"
 }
 
 apply from: 'gradle/gradle/nexus.upload.plugin.gradle'
