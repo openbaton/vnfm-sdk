@@ -485,7 +485,7 @@ public abstract class AbstractVnfm
                 "Resuming vnfr '"
                     + virtualNetworkFunctionRecord.getId()
                     + "' with dependency target: '"
-                    + orVnfmResumeMessage.getVnfrd().getTarget()
+                    + orVnfmResumeMessage.getVnfrd()
                     + "' for action: "
                     + resumedAction
                     + "'");
