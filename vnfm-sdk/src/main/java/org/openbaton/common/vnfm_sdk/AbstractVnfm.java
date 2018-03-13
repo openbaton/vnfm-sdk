@@ -477,18 +477,30 @@ public abstract class AbstractVnfm
             nsrId = virtualNetworkFunctionRecord.getParent_ns_id();
 
             Action resumedAction = this.getResumedAction(virtualNetworkFunctionRecord, null);
+            if (orVnfmGenericMessage.getVnfrd().getTarget() == null) {
+              log.debug(
+                  "Resuming vnfr '"
+                      + virtualNetworkFunctionRecord.getId()
+                      + "' with dependency target: '"
+                      + orVnfmResumeMessage.getVnfrd()
+                      + "' for action: "
+                      + resumedAction
+                      + "'");
+            } else {
+              log.debug(
+                  "Resuming vnfr '"
+                      + virtualNetworkFunctionRecord.getId()
+                      + "' with dependency target: '"
+                      + orVnfmResumeMessage.getVnfrd().getTarget()
+                      + "' for action: "
+                      + resumedAction
+                      + "'");
+            }
             nfvMessage =
                 VnfmUtils.getNfvMessage(
                     resumedAction,
                     resume(virtualNetworkFunctionRecord, null, orVnfmResumeMessage.getVnfrd()));
-            log.debug(
-                "Resuming vnfr '"
-                    + virtualNetworkFunctionRecord.getId()
-                    + "' with dependency target: '"
-                    + orVnfmResumeMessage.getVnfrd().getTarget()
-                    + "' for action: "
-                    + resumedAction
-                    + "'");
+
             break;
           }
         case LOG_REQUEST:
