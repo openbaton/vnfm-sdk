@@ -37,7 +37,6 @@ import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Scope;
 import org.springframework.stereotype.Service;
 
-/** Created by lto on 23/09/15. */
 @Service
 @Scope
 @ConfigurationProperties
@@ -213,7 +212,6 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
     rabbitTemplate.setReplyTimeout(timeout * 1000);
     rabbitTemplate.afterPropertiesSet();
 
-    //    queueName = queueName.replace("_", "-");
     log.debug("Sending to: " + queueName);
     String res =
         (String) rabbitTemplate.convertSendAndReceive("openbaton-exchange", queueName, message);
@@ -241,8 +239,7 @@ public class VnfmSpringHelperRabbit extends VnfmHelper {
         getConnectionFactory(brokerIp, port, rabbitUsername, rabbitPassword, virtualHost);
     Connection connection = factory.newConnection();
     Channel channel = connection.createChannel();
-    //    channel.exchangeDeclare(exchange, "topic", true);
-    channel.queueDeclare(queue, false, false, true, null);
+    channel.queueDeclare(queue, durable, exclusive, autodelete, null);
     channel.queueBind(queue, exchange, queue);
     channel.basicQos(1);
     channel.close();

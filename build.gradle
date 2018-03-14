@@ -41,6 +41,7 @@ ext {
      * Junit Version
      */
     junitVersion = "4.12"
+    openbatonVersion = "5.2.0"
 }
 
 apply from: 'gradle/gradle/nexus.upload.plugin.gradle'
@@ -89,7 +90,6 @@ allprojects {
             resources { srcDir 'src/test/resources' }
             compileClasspath += sourceSets.test.compileClasspath
             runtimeClasspath += sourceSets.test.runtimeClasspath
-//            output.classesDir = sourceSets.test.output.classesDir
         }
 
     }
