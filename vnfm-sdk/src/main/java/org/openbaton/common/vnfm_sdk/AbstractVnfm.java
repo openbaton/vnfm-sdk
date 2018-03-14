@@ -479,12 +479,10 @@ public abstract class AbstractVnfm
             nsrId = virtualNetworkFunctionRecord.getParent_ns_id();
 
             Action resumedAction = this.getResumedAction(virtualNetworkFunctionRecord, null);
-            if (orVnfmGenericMessage.getVnfrd().getTarget() == null) {
+            if (orVnfmResumeMessage.getVnfrd() == null) {
               log.debug(
                   "Resuming vnfr '"
                       + virtualNetworkFunctionRecord.getId()
-                      + "' with dependency target: '"
-                      + orVnfmResumeMessage.getVnfrd()
                       + "' for action: "
                       + resumedAction
                       + "'");
