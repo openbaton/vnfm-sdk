@@ -46,17 +46,8 @@ import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
 import org.openbaton.catalogue.nfvo.Action;
 import org.openbaton.catalogue.nfvo.Script;
 import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
+import org.openbaton.catalogue.nfvo.messages.*;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmErrorMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmGenericMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmGrantLifecycleOperationMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmHealVNFRequestMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmInstantiateMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmLogMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmScalingMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmStartStopMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmUpdateMessage;
-import org.openbaton.catalogue.nfvo.messages.VnfmOrLogMessage;
 import org.openbaton.catalogue.nfvo.viminstances.BaseVimInstance;
 import org.openbaton.catalogue.security.Key;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
@@ -493,6 +484,16 @@ public abstract class AbstractVnfm
                     + "'");
             break;
           }
+        case EXECUTE:
+          {
+            OrVnfmExecuteScriptMessage orVnfmExecuteMessage = (OrVnfmExecuteScriptMessage) message;
+            nfvMessage =
+                VnfmUtils.getNfvMessage(
+                    Action.EXECUTE,
+                    executeScript(
+                        orVnfmExecuteMessage.getVnfr(), orVnfmExecuteMessage.getScript()));
+            break;
+          }
         case LOG_REQUEST:
           {
             OrVnfmLogMessage orVnfmLogMessage = (OrVnfmLogMessage) message;
@@ -661,6 +662,9 @@ public abstract class AbstractVnfm
       VNFCInstance vnfcInstance,
       VNFRecordDependency dependency)
       throws Exception;
+
+  public abstract VirtualNetworkFunctionRecord executeScript(
+      VirtualNetworkFunctionRecord vnfr, Script script) throws Exception;
 
   protected Action getResumedAction(
       VirtualNetworkFunctionRecord virtualNetworkFunctionRecord, VNFCInstance vnfcInstance) {
