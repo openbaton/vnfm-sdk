@@ -677,7 +677,8 @@ public abstract class AbstractVnfm
       VirtualNetworkFunctionRecord vnfr, Script script) throws Exception;
 
   protected Action getResumedAction(
-      VirtualNetworkFunctionRecord virtualNetworkFunctionRecord, VNFCInstance vnfcInstance) {
+      VirtualNetworkFunctionRecord virtualNetworkFunctionRecord, VNFCInstance vnfcInstance)
+      throws Exception {
     return null;
   }
 
