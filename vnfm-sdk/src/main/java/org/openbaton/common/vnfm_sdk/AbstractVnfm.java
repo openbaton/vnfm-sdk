@@ -20,14 +20,7 @@ package org.openbaton.common.vnfm_sdk;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
-import java.util.Collection;
-import java.util.HashSet;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
-import java.util.Properties;
-import java.util.Scanner;
-import java.util.Set;
+import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
@@ -46,17 +39,8 @@ import org.openbaton.catalogue.mano.record.VirtualNetworkFunctionRecord;
 import org.openbaton.catalogue.nfvo.Action;
 import org.openbaton.catalogue.nfvo.Script;
 import org.openbaton.catalogue.nfvo.VnfmManagerEndpoint;
+import org.openbaton.catalogue.nfvo.messages.*;
 import org.openbaton.catalogue.nfvo.messages.Interfaces.NFVMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmErrorMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmGenericMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmGrantLifecycleOperationMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmHealVNFRequestMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmInstantiateMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmLogMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmScalingMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmStartStopMessage;
-import org.openbaton.catalogue.nfvo.messages.OrVnfmUpdateMessage;
-import org.openbaton.catalogue.nfvo.messages.VnfmOrLogMessage;
 import org.openbaton.catalogue.nfvo.viminstances.BaseVimInstance;
 import org.openbaton.catalogue.security.Key;
 import org.openbaton.common.vnfm_sdk.exception.BadFormatException;
@@ -479,18 +463,43 @@ public abstract class AbstractVnfm
             nsrId = virtualNetworkFunctionRecord.getParent_ns_id();
 
             Action resumedAction = this.getResumedAction(virtualNetworkFunctionRecord, null);
+            if (orVnfmResumeMessage.getVnfrd() == null) {
+              log.debug(
+                  "Resuming vnfr '"
+                      + virtualNetworkFunctionRecord.getId()
+                      + "' for action: "
+                      + resumedAction
+                      + "'");
+            } else {
+              log.debug(
+                  "Resuming vnfr '"
+                      + virtualNetworkFunctionRecord.getId()
+                      + "' with dependency target: '"
+                      + orVnfmResumeMessage.getVnfrd().getTarget()
+                      + "' for action: "
+                      + resumedAction
+                      + "'");
+            }
+            // to prevent a VNFM, that does not implement resume, from throwing Null Pointer Exception.
+            if (resumedAction == null)
+            {
+              resumedAction = Action.ERROR;
+            }
             nfvMessage =
                 VnfmUtils.getNfvMessage(
                     resumedAction,
                     resume(virtualNetworkFunctionRecord, null, orVnfmResumeMessage.getVnfrd()));
-            log.debug(
-                "Resuming vnfr '"
-                    + virtualNetworkFunctionRecord.getId()
-                    + "' with dependency target: '"
-                    + orVnfmResumeMessage.getVnfrd().getTarget()
-                    + "' for action: "
-                    + resumedAction
-                    + "'");
+
+            break;
+          }
+        case EXECUTE:
+          {
+            OrVnfmExecuteScriptMessage orVnfmExecuteMessage = (OrVnfmExecuteScriptMessage) message;
+            nfvMessage =
+                VnfmUtils.getNfvMessage(
+                    Action.EXECUTE,
+                    executeScript(
+                        orVnfmExecuteMessage.getVnfr(), orVnfmExecuteMessage.getScript()));
             break;
           }
         case LOG_REQUEST:
@@ -662,8 +671,12 @@ public abstract class AbstractVnfm
       VNFRecordDependency dependency)
       throws Exception;
 
+  public abstract VirtualNetworkFunctionRecord executeScript(
+      VirtualNetworkFunctionRecord vnfr, Script script) throws Exception;
+
   protected Action getResumedAction(
-      VirtualNetworkFunctionRecord virtualNetworkFunctionRecord, VNFCInstance vnfcInstance) {
+      VirtualNetworkFunctionRecord virtualNetworkFunctionRecord, VNFCInstance vnfcInstance)
+      throws Exception {
     return null;
   }
 
