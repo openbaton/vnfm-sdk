@@ -481,8 +481,7 @@ public abstract class AbstractVnfm
                       + "'");
             }
             // to prevent a VNFM, that does not implement resume, from throwing Null Pointer Exception.
-            if (resumedAction == null)
-            {
+            if (resumedAction == null) {
               resumedAction = Action.ERROR;
             }
             nfvMessage =
