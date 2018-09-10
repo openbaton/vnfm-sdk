@@ -15,6 +15,6 @@
  */
 
 dependencies {
-    compile 'org.openbaton:catalogue:6.0.0-RC1'
-    compile 'org.openbaton:common:6.0.0-RC1'
+    compile 'org.openbaton:catalogue:'+ openbatonVersion
+    compile 'org.openbaton:common:' + openbatonVersion
 }
